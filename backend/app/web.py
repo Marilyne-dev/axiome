@@ -52,6 +52,7 @@ from app.models.rapprochement import RapprochementBancaire
 from app.models.user import Role as _Role
 from app.models.user import User as _User
 from app.services import (
+    billing_service,
     controles_service,
     csrd_service,
     document_service,
@@ -553,7 +554,7 @@ def administration_inviter(request: Request, email: str = Form(...),
         return RedirectResponse("/vue/administration?err=email", status_code=302)
     cab = db.get(Cabinet, user.cabinet_id)
     if cab and cab.quota_collaborateurs and cab.quota_collaborateurs > 0:
-        nb = db.query(_User).filter_by(cabinet_id=user.cabinet_id, is_archived=False).count()
+        nb = billing_service.compter_collaborateurs(db, user.cabinet_id)
         if nb >= cab.quota_collaborateurs:
             return RedirectResponse("/vue/administration?err=quota", status_code=302)
     invite = _User(email=email, hashed_password="", nom_complet=nom_complet.strip() or email,
@@ -1691,7 +1692,7 @@ async def administration_collaborateur_add(
         return RedirectResponse("/vue/administration?err=mdp", status_code=302)
     cab = db.get(Cabinet, user.cabinet_id)
     if cab and cab.quota_collaborateurs and cab.quota_collaborateurs > 0:
-        nb = db.query(_User).filter_by(cabinet_id=user.cabinet_id, is_archived=False).count()
+        nb = billing_service.compter_collaborateurs(db, user.cabinet_id)
         if nb >= cab.quota_collaborateurs:
             return RedirectResponse("/vue/administration?err=quota", status_code=302)
     nouveau = _User(email=email, hashed_password=hash_password(password),
@@ -1741,7 +1742,7 @@ def console_page(request: Request, db: Session = Depends(get_db)):
     cabinets = db.query(Cabinet).order_by(Cabinet.nom).all()
     lignes = []
     for c in cabinets:
-        nb_users = db.query(_User).filter_by(cabinet_id=c.id).count()
+        nb_users = billing_service.compter_collaborateurs(db, c.id)
         nb_clients = db.query(Client).filter_by(cabinet_id=c.id).count()
         nb_missions = (db.query(Mission).join(Client, Mission.client_id == Client.id)
                        .filter(Client.cabinet_id == c.id).count())

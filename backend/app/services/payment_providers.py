@@ -8,9 +8,13 @@ le statut réel. Les numéros de carte / IBAN sont saisis dans les champs sécur
 """
 from __future__ import annotations
 
+import logging
+
 import httpx
 
 from app.core.config import settings
+
+logger = logging.getLogger("axiome.paiement")
 
 # Opérateurs Mobile Money acceptés SANS redirection (API directe FedaPay) : code -> (libellé, pays ISO).
 OPERATEURS_DIRECTS = {
@@ -23,6 +27,25 @@ OPERATEURS_DIRECTS = {
 
 class ErreurPaiement(Exception):
     """Paiement impossible (fournisseur indisponible ou non configuré)."""
+
+
+def _erreur_fournisseur(nom: str, exc: httpx.HTTPError) -> ErreurPaiement:
+    """Journalise la VRAIE cause (code HTTP + réponse du fournisseur, jamais les clés) et renvoie un message clair.
+
+    Avant, toute erreur devenait « service momentanément indisponible », ce qui masquait une clé invalide,
+    une devise refusée ou un montant sous le minimum du fournisseur.
+    """
+    if isinstance(exc, httpx.HTTPStatusError):
+        code = exc.response.status_code
+        corps = exc.response.text[:500]
+        logger.error("%s : HTTP %s — %s", nom, code, corps)
+        if code in (401, 403):
+            return ErreurPaiement(f"{nom} refuse la clé API configurée (HTTP {code}). Vérifiez les clés du serveur.")
+        if code in (400, 402, 422):
+            return ErreurPaiement(f"{nom} a refusé la demande de paiement (HTTP {code}). Consultez les journaux du serveur.")
+        return ErreurPaiement(f"{nom} est momentanément indisponible (HTTP {code}). Réessayez.")
+    logger.error("%s : connexion impossible — %s", nom, exc.__class__.__name__)
+    return ErreurPaiement(f"Impossible de joindre {nom} ({exc.__class__.__name__}). Vérifiez la connexion du serveur.")
 
 
 def sandbox_actif() -> bool:
@@ -82,7 +105,7 @@ def stripe_creer_intention(*, reference: str, montant: int, devise: str, libelle
             j = r.json()
             return j["id"], j["client_secret"]
     except httpx.HTTPError as exc:
-        raise ErreurPaiement("Le service de paiement est momentanément indisponible. Réessayez.") from exc
+        raise _erreur_fournisseur("Stripe", exc) from exc
 
 
 # ------------------------------------------------------------------ FedaPay
@@ -116,7 +139,7 @@ def fedapay_lien(*, reference: str, montant: int, devise: str, libelle: str, ema
             tid, _token, url = _fedapay_transaction(http, reference=reference, montant=montant, devise=devise,
                                                     libelle=libelle, email=email, nom=nom)
     except httpx.HTTPError as exc:
-        raise ErreurPaiement("Le service de paiement est momentanément indisponible. Réessayez.") from exc
+        raise _erreur_fournisseur("FedaPay", exc) from exc
     if not url:
         raise ErreurPaiement("Réponse FedaPay inattendue.")
     return tid, url
@@ -143,7 +166,7 @@ def fedapay_mobile_money(*, reference: str, montant: int, devise: str, libelle: 
             r.raise_for_status()
             return tid
     except httpx.HTTPError as exc:
-        raise ErreurPaiement("Le service de paiement est momentanément indisponible. Réessayez.") from exc
+        raise _erreur_fournisseur("FedaPay", exc) from exc
 
 
 # ------------------------------------------------------------------ vérification (source de vérité)

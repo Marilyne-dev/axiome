@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { Icon, ICONS } from "./ui.jsx";
 
 const NAV = [["/espace", "Tableau de bord", "home", true], ["/espace/clients", "Clients", "users"], ["/espace/missions", "Missions", "folder"], ["/espace/abonnement", "Abonnement", "card"]];
-const SOON = ["Import FEC", "Cartographie des risques", "Circularisation", "Rapports", "Équipe du cabinet"];
+const SOON = ["Import FEC", "Cartographie des risques", "Circularisation", "Rapports"];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -19,6 +19,10 @@ export default function AppLayout() {
           {NAV.map(([to, label, icon, end]) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `side-link${isActive ? " on" : ""}`}><Icon d={ICONS[icon]} />{label}</NavLink>
           ))}
+          {user.roles.includes("ADMIN") && (
+            // Écran rendu par le back (même origine via le proxy) : navigation complète, pas de route React.
+            <a className="side-link" href="/vue/administration"><Icon d={ICONS.users} />Équipe du cabinet</a>
+          )}
           <div className="side-sep">Prochainement</div>
           {SOON.map((s) => <span key={s} className="side-link soon">{s}<em>bientôt</em></span>)}
         </nav>

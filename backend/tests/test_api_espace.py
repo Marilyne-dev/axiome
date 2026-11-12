@@ -47,7 +47,7 @@ def test_dashboard_missions_et_quotas(client, db_session):
     _user(db_session, "chef@c.fr", "ADMIN", cab.id)
     d = client.get("/espace/dashboard", headers=_login(client, "chef@c.fr", "Test!2026")).json()
     assert d["cabinet"]["nom"] == "Cabinet C"
-    assert d["cabinet"]["collaborateurs"] == {"utilises": 1, "quota": 3}
+    assert d["cabinet"]["collaborateurs"] == {"utilises": 0, "quota": 3}   # administrateur non décompté
     assert d["cabinet"]["missions"] == {"utilises": 1, "quota": 10}
     assert d["kpis"]["clients"] == 1 and d["missions"][0]["client"] == "Gamma"
 

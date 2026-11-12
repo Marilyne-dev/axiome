@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*",     "destination": "https://axiome.onrender.com/:path*" },
+    { "source": "/vue/:path*",     "destination": "https://axiome.onrender.com/vue/:path*" },
+    { "source": "/console/:path*", "destination": "https://axiome.onrender.com/console/:path*" },
+    { "source": "/static/:path*",  "destination": "https://axiome.onrender.com/static/:path*" },
+    { "source": "/login",          "destination": "https://axiome.onrender.com/login" },
+    { "source": "/logout",         "destination": "https://axiome.onrender.com/logout" },
+    { "source": "/(.*)",           "destination": "/index.html" }
+  ]
+}

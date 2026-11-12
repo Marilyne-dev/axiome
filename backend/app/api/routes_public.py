@@ -70,7 +70,7 @@ def etat_paiement(reference: str, db: Session = Depends(get_db)) -> dict:
     pay = _paiement(db, reference)
     _rafraichir(db, pay)
     abo = db.get(Abonnement, pay.abonnement_id)
-    return {"statut": pay.statut, "abonnement": bs.statut_effectif(abo), "plan": db.get(Plan, abo.plan_id).nom,
+    return {"statut": pay.statut, "abonnement": bs.statut_effectif(abo), "plan": db.get(Plan, pay.plan_id or abo.plan_id).nom,
             "montant": pay.montant, "devise": pay.devise, "periode": pay.periode}
 
 
@@ -93,7 +93,7 @@ def _paiement_ouvert(db: Session, reference: str) -> tuple[Paiement, Abonnement,
     if pay.statut != "en_attente":
         raise HTTPException(status.HTTP_409_CONFLICT, "Ce paiement est déjà clos")
     abo = db.get(Abonnement, pay.abonnement_id)
-    return pay, abo, db.get(Plan, abo.plan_id)
+    return pay, abo, db.get(Plan, pay.plan_id or abo.plan_id)
 
 
 def _payeur(db: Session, abo: Abonnement) -> tuple[str, str]:
@@ -118,7 +118,7 @@ def options_paiement(reference: str, db: Session = Depends(get_db)) -> dict:
     pay = _paiement(db, reference)
     _rafraichir(db, pay)
     abo = db.get(Abonnement, pay.abonnement_id)
-    return {"statut": pay.statut, "plan": db.get(Plan, abo.plan_id).nom, "periode": pay.periode,
+    return {"statut": pay.statut, "plan": db.get(Plan, pay.plan_id or abo.plan_id).nom, "periode": pay.periode,
             "montant": pay.montant, "devise": pay.devise, "methodes": pp.methodes_disponibles(pay.devise),
             "stripe_cle_publique": settings.stripe_publishable_key if pay.devise == "EUR" else "",
             "simulation": pp.sandbox_actif(), "fournisseur": pay.fournisseur}

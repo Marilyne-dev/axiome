@@ -21,13 +21,17 @@ def _superadmin(client, db):
 
 
 def test_quota_collaborateurs_bloque(client, db_session):
+    """L'administrateur n'est pas décompté : quota 1 = l'administrateur + 1 collaborateur."""
     cab = db_session.query(Cabinet).first()
-    nb = db_session.query(User).filter_by(cabinet_id=cab.id, is_archived=False).count()
-    cab.quota_collaborateurs = nb  # quota atteint
+    cab.quota_collaborateurs = 1
     db_session.commit()
-    r = client.post("/vue/administration/collaborateur", cookies=ck(client), follow_redirects=False,
+    cookies = ck(client)
+    r1 = client.post("/vue/administration/collaborateur", cookies=cookies, follow_redirects=False,
+                     data={"email": "un@cab.fr", "role": "COLLABORATEUR", "password": "password12"})
+    assert not r1.headers.get("location", "").endswith("err=quota")      # le 1er collaborateur passe
+    r = client.post("/vue/administration/collaborateur", cookies=cookies, follow_redirects=False,
                     data={"email": "trop@cab.fr", "role": "COLLABORATEUR", "password": "password12"})
-    assert r.headers.get("location", "").endswith("err=quota")
+    assert r.headers.get("location", "").endswith("err=quota")           # le 2e est refusé
 
 
 def test_quota_missions_bloque(client, db_session):

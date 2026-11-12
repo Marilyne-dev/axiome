@@ -45,7 +45,7 @@ def _abonnement_info(db: Session, user: User) -> dict | None:
         return {"statut": "actif", "plan": None, "date_fin": None}      # cabinet créé par l'éditeur
     plan = db.get(Plan, abo.plan_id)
     return {"statut": billing_service.statut_effectif(abo), "plan": plan.nom if plan else None,
-            "periode": abo.periode, "devise": abo.devise,
+            "plan_code": plan.code if plan else None, "periode": abo.periode, "devise": abo.devise,
             "date_fin": abo.date_fin.isoformat() if abo.date_fin else None}
 
 
@@ -74,8 +74,7 @@ def _infos_cabinet(db: Session, user: User, nb_missions: int) -> dict | None:
     cab = db.get(Cabinet, user.cabinet_id)
     if not cab or cab.is_archived:
         return None
-    nb_collab = (db.query(func.count(User.id))
-                 .filter(User.cabinet_id == cab.id, User.is_archived.is_(False)).scalar() or 0)
+    nb_collab = billing_service.compter_collaborateurs(db, cab.id)     # l'administrateur n'est pas décompté
     return {
         "nom": cab.nom, "pays": cab.pays, "devise": cab.devise_defaut,
         "referentiel": cab.referentiel_defaut,
@@ -140,7 +139,7 @@ def abonnement(db: Session = Depends(get_db), user: User = Depends(_utilisateur_
     return {"abonnement": _abonnement_info(db, user),
             "paiements": [{"reference": p.reference, "montant": p.montant, "devise": p.devise, "periode": p.periode,
                            "statut": p.statut, "date": (p.paye_le or p.created_at).isoformat()} for p in paiements],
-            "peut_payer": user.has_role("ADMIN")}
+            "peut_payer": user.has_role("ADMIN"), "peut_changer": user.has_role("ADMIN") and abo.statut not in ("suspendu", "resilie")}
 
 
 @router.post("/abonnement/payer")
@@ -158,6 +157,43 @@ def payer(db: Session = Depends(get_db), user: User = Depends(_utilisateur_cabin
     except pp.ErreurPaiement as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
     return {"checkout_url": url, "reference": pay.reference}
+
+
+class ChangerOffreIn(BaseModel):
+    plan_code: str = Field(min_length=1, max_length=30)
+    periode: str = Field(default="mensuel", pattern="^(mensuel|annuel)$")
+
+
+@router.get("/offres")
+def offres(db: Session = Depends(get_db), user: User = Depends(_utilisateur_cabinet)) -> dict:
+    """Offres disponibles pour ce cabinet, avec la possibilité de changer (quotas respectés) pour chacune."""
+    abo = billing_service.abonnement_du_cabinet(db, user.cabinet_id)
+    if abo is None:
+        return {"offres": [], "peut_changer": False}
+    return {"offres": billing_service.offres_pour_cabinet(db, abo),
+            "peut_changer": user.has_role("ADMIN") and abo.statut not in ("suspendu", "resilie")}
+
+
+@router.post("/abonnement/changer-offre")
+def changer_offre(data: ChangerOffreIn, db: Session = Depends(get_db), user: User = Depends(_utilisateur_cabinet)) -> dict:
+    """Ouvre le paiement d'un changement d'offre (montée/descente) ou de période. Administrateur du cabinet uniquement.
+
+    L'offre ne change qu'une fois le paiement confirmé ; la nouvelle période démarre alors immédiatement.
+    """
+    if not user.has_role("ADMIN"):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Réservé à l'administrateur du cabinet")
+    abo = billing_service.abonnement_du_cabinet(db, user.cabinet_id)
+    if abo is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Aucun abonnement à modifier. Contactez AXIOME.")
+    pay = billing_service.demander_changement(db, abo, data.plan_code, data.periode)
+    journaliser(db, user_id=user.id, action="abonnement.changer_offre", objet="abonnement",
+                detail=f"{data.plan_code}/{data.periode}")
+    db.commit()
+    try:
+        url = ouvrir_paiement(db, pay, user.email, user.nom_complet or user.email)
+    except pp.ErreurPaiement as exc:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
+    return {"checkout_url": url, "reference": pay.reference, "montant": pay.montant, "devise": pay.devise}
 
 
 # ------------------------------------------------------------------ création client / mission, détail mission
@@ -213,8 +249,7 @@ def creer_mission(data: MissionIn, db: Session = Depends(get_db), user: User = D
         raise HTTPException(422, "Type de mission inconnu")
     cab = db.get(Cabinet, user.cabinet_id)
     if cab and cab.quota_missions:
-        nb = (db.query(func.count(Mission.id)).join(Client, Mission.client_id == Client.id)
-              .filter(Client.cabinet_id == user.cabinet_id, Mission.is_archived.is_(False)).scalar() or 0)
+        nb = billing_service.compter_missions(db, user.cabinet_id)
         if nb >= cab.quota_missions:
             raise HTTPException(status.HTTP_409_CONFLICT, "Quota de missions atteint pour votre offre.")
     m = Mission(client_id=client.id, intitule=data.intitule.strip(), exercice=data.exercice.strip(),

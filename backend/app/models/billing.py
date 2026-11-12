@@ -54,6 +54,8 @@ class Paiement(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     reference: Mapped[str] = mapped_column(String(40), unique=True, index=True, nullable=False)  # jeton public
     abonnement_id: Mapped[int] = mapped_column(ForeignKey("abonnements.id", ondelete="CASCADE"), nullable=False, index=True)
+    # Offre visée par ce paiement quand il s'agit d'un changement d'offre (NULL = renouvellement de l'offre actuelle).
+    plan_id: Mapped[int | None] = mapped_column(ForeignKey("plans.id"), nullable=True)
     fournisseur: Mapped[str] = mapped_column(String(20), default="")      # stripe | fedapay | test
     fournisseur_ref: Mapped[str] = mapped_column(String(120), default="", index=True)
     montant: Mapped[int] = mapped_column(Integer, nullable=False)

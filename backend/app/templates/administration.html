@@ -4,6 +4,7 @@
 <header class="topbar">
   <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
   <nav><a class="link" href="/dashboard">{{ t('nav.dashboard', lang) }}</a>
+       <a class="link" href="/espace/abonnement">Abonnement</a>
        <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
 </header>
 <main class="container">
@@ -54,7 +55,7 @@
   <section class="panel">
     <h2>Collaborateurs <span class="chip">{{ collaborateurs | length }}</span></h2>
     <p class="muted small">Le CAC (administrateur) crée et gère les comptes de son cabinet. Le rôle éditeur AXIOME n'est pas assignable ici.</p>
-    {% if err == 'quota' %}<div class="banner banner-warn">Quota de collaborateurs atteint. Contactez l'éditeur AXIOME pour l'augmenter.</div>{% endif %}
+    {% if err == 'quota' %}<div class="banner banner-warn">Quota de collaborateurs atteint (l'administrateur n'est pas décompté). <a class="link" href="/espace/abonnement">Changer d'offre →</a></div>{% endif %}
     {% if err == 'email' %}<div class="banner banner-warn">Adresse e-mail déjà utilisée ou invalide.</div>{% endif %}
     {% if lien_invitation %}<div class="banner ok-v" style="word-break:break-all">Invitation créée. Lien d'activation à transmettre : <a class="link" href="{{ lien_invitation }}">{{ lien_invitation }}</a></div>{% endif %}
     <table class="grid">

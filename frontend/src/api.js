@@ -54,6 +54,8 @@ export const getMissions = () => authed("/espace/missions");
 
 export const getAbonnement = () => authed("/espace/abonnement");
 export const payerAbonnement = () => authed("/espace/abonnement/payer", { method: "POST" });
+export const getOffres = () => authed("/espace/offres");
+export const changerOffre = (plan_code, periode) => authed("/espace/abonnement/changer-offre", { method: "POST", body: { plan_code, periode } });
 
 // ---- Site public : offres, inscription, paiement ----
 export const getPlans = () => raw("/public/plans");

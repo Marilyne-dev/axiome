@@ -21,6 +21,7 @@ from app.api import (
     routes_auth,
     routes_clients,
     routes_confirmations,
+    routes_console_billing,
     routes_controle_interne,
     routes_echantillon,
     routes_espace,
@@ -75,6 +76,7 @@ app.include_router(routes_ia.router)
 app.include_router(routes_rapports.router, dependencies=[Depends(garde_mission)])
 app.include_router(routes_espace.router)
 app.include_router(routes_public.router)
+app.include_router(routes_console_billing.router)
 app.include_router(web.router)
 
 

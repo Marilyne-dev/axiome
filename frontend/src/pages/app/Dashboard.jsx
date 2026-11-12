@@ -26,7 +26,7 @@ const Quota = ({ label, q, color }) => {
         <b>{q.utilises}</b><small>{illimite ? "∞" : `/ ${q.quota}`}</small>
       </Ring>
       <div><h4>{label}</h4>
-        <p>{illimite ? "Illimité avec votre offre" : plein ? "Limite atteinte : passez à une offre supérieure" : `${q.quota - q.utilises} restant(s)`}</p></div>
+        <p>{illimite ? "Illimité avec votre offre" : plein ? <>Limite atteinte : <Link to="/espace/abonnement" className="lnk-offre">passez à une offre supérieure</Link></> : `${q.quota - q.utilises} restant(s)`}</p></div>
     </div>
   );
 };
