@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Confirmations · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.confirmations', lang) }}</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span>
+      <span class="chip">{{ confs|length }} circularisation(s)</span></div>
+  </div>
+
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>Tiers</th><th>Type</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for c in confs %}
+        <tr>
+          <td>{{ c.tiers }}</td>
+          <td><span class="tag">{{ c.type_tiers }}</span></td>
+          <td><span class="niv {% if c.statut == 'recue' %}niv-faible{% elif c.statut == 'sans_reponse' %}niv-eleve{% else %}niv-modere{% endif %}">{{ c.statut }}</span></td>
+          <td>
+            <form method="post" action="/missions/{{ mission.id }}/vue/confirmations/{{ c.id }}/statut" class="row">
+              <select name="statut" onchange="this.form.submit()">
+                {% for s in ['envoyee','relancee','recue','sans_reponse'] %}<option value="{{ s }}" {% if c.statut == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Aucune confirmation.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Nouvelle circularisation</h2>
+    <form method="post" action="/missions/{{ mission.id }}/vue/confirmations/add" class="row">
+      <input type="text" name="tiers" placeholder="Tiers (ex. Banque X)" required>
+      <select name="type_tiers">
+        {% for tt in ['banque','client','fournisseur','avocat','autre'] %}<option value="{{ tt }}">{{ tt }}</option>{% endfor %}
+      </select>
+      <button class="btn-primary" type="submit">Envoyer la demande</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

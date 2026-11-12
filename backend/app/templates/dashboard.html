@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ t('dashboard.title', lang) }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <span class="pill">{{ user.nom_complet }}</span>
+    {% for r in roles %}<span class="pill pill-role">{{ r }}</span>{% endfor %}
+    <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <h1>{{ t('dashboard.welcome', lang) }}, {{ user.nom_complet or user.email }}</h1>
+  <section class="cards">
+    <div class="card"><div class="card-k">Missions</div><div class="card-v">{{ missions|length }}</div></div>
+    <div class="card"><div class="card-k">Rôles</div><div class="card-v">{{ roles|length }}</div></div>
+    <div class="card"><div class="card-k">Statut socle</div><div class="card-v ok">Phase 1 ✓</div></div>
+  </section>
+
+  <h2>Missions <a class="btn-sm" href="/missions">Ouvrir l'espace de travail →</a> <a class="btn-sm" href="/vue/clients">Clients →</a> <a class="btn-sm" href="/vue/catalogue">Catalogue des missions →</a> <a class="btn-sm" href="/vue/veille">{{ t('nav.veille', lang) }} →</a>{% if user.has_role('ADMIN') %} <a class="btn-sm" href="/vue/administration">Administration →</a>{% endif %}</h2>
+  <table class="grid">
+    <thead><tr><th>Intitulé</th><th>Client</th><th>Référentiel</th><th>Pays</th><th>Devise</th><th>Statut</th></tr></thead>
+    <tbody>
+      {% for m in missions %}
+      <tr>
+        <td>{{ m.intitule }}</td>
+        <td>{{ m.client.raison_sociale if m.client else '—' }}</td>
+        <td><span class="tag">{{ m.referentiel }}</span></td>
+        <td>{{ m.pays }}</td>
+        <td>{{ m.devise }}</td>
+        <td><span class="badge">{{ m.statut }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted">Aucune mission (lancer le seed de démonstration).</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted small">Espace LCB-FT réservé au correspondant habilité (à venir en Phase 5).</p>
+</main>
+{% endblock %}

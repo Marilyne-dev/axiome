@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Dossier · Portail client{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span>
+    <span class="pill">Portail client</span></div>
+  <nav><a class="link" href="/portail">← Mes dossiers</a>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ mission.intitule }}</h1>
+    <div class="chips">
+      <span class="chip">{{ mission.referentiel }}</span>
+      <span class="chip">Exercice {{ mission.exercice or '—' }}</span>
+      <span class="chip">Statut : {{ mission.statut }}</span>
+    </div>
+  </div>
+
+  {% if err %}<div class="banner alert-v">{{ err }}</div>{% endif %}
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Avancement des travaux</h2>
+      <table class="mini">
+        {% for c in cycles %}
+        <tr><td>{{ c.code }}</td><td>{{ c.libelle }}</td></tr>
+        {% else %}<tr><td class="muted">Cycles non encore définis.</td></tr>{% endfor %}
+      </table>
+      <p class="muted small">Vue synthétique en lecture seule. Le détail des travaux reste interne au cabinet.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Pièces du dossier</h2>
+      <table class="mini">
+        {% for d in docs %}
+        <tr>
+          <td>{{ d.nom }}</td>
+          <td class="muted">{{ d.cycle_code or '—' }}</td>
+          <td><a class="link" href="/portail/missions/{{ mission.id }}/documents/{{ d.id }}/download">Télécharger</a></td>
+        </tr>
+        {% else %}<tr><td class="muted">Aucune pièce.</td></tr>{% endfor %}
+      </table>
+      <hr>
+      <h3>Déposer une pièce</h3>
+      <form method="post" action="/portail/missions/{{ mission.id }}/documents/upload" enctype="multipart/form-data" class="row">
+        <input type="file" name="fichier" required>
+        <button class="btn-primary" type="submit">Déposer</button>
+      </form>
+      <p class="muted small">Formats acceptés : PDF, Excel, Word, CSV, images. Max 25 Mo.</p>
+    </section>
+  </div>
+</main>
+{% endblock %}

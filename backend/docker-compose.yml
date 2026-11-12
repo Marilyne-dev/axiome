@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-axiome}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD requis dans .env}
+      POSTGRES_DB: ${POSTGRES_DB:-axiome}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-axiome}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+    # Port DB NON exposé à l'hôte (durcissement) — décommenter pour un accès local :
+    # ports: ["5432:5432"]
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-axiome}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-axiome}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["8000:8000"]
+    restart: unless-stopped
+    # Migrations Alembic + amorçage (référentiels/RBAC/admin depuis l'env), PUIS serveur.
+    # Aucun compte de démonstration n'est créé en production.
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app.db.init_db &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+
+volumes:
+  pgdata:

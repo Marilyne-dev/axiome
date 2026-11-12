@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Fraude · {{ mission.intitule }}{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.fraude', lang) }}</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span></div></div>
+
+  {% if not benford %}
+  <section class="panel"><p class="muted">Importez d'abord une balance pour lancer l'analyse.</p></section>
+  {% else %}
+  <div class="grid2">
+    <section class="panel">
+      <h2>Loi de Benford (1<sup>er</sup> chiffre)</h2>
+      {% if benford.exploitable %}
+      <div class="chips">
+        <span class="chip">n = {{ benford.n }}</span>
+        <span class="chip {% if benford.suspicion %}alert-v{% endif %}">MAD {{ benford.mad }} — {{ benford.conformite }}</span>
+        <span class="chip">χ² {{ benford.khi2 }} / {{ benford.khi2_critique_5pct }}</span>
+        <span class="niv {% if benford.suspicion %}niv-critique{% else %}niv-faible{% endif %}">{% if benford.suspicion %}suspicion{% else %}conforme{% endif %}</span>
+      </div>
+      <table class="grid" style="margin-top:.6rem">
+        <thead><tr><th>Chiffre</th><th>Observé</th><th>Attendu</th><th>Écart</th></tr></thead>
+        <tbody>
+          {% for d in benford.distribution %}
+          <tr><td>{{ d.chiffre }}</td><td class="num">{{ '%.1f'|format(d.observe*100) }} %</td>
+              <td class="num">{{ '%.1f'|format(d.attendu*100) }} %</td>
+              <td class="num {% if d.ecart >= 0.03 %}alert-v{% endif %}">{{ '%.1f'|format(d.ecart*100) }} %</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="muted">{{ benford.message }}</p>{% endif %}
+    </section>
+
+    <section class="panel">
+      <h2>Indicateurs complémentaires</h2>
+      <table class="mini">
+        <tr><td>Montants analysés</td><td class="num">{{ indicateurs.n }}</td></tr>
+        <tr><td>Nombres ronds (≥ 1 000, multiples de 1 000)</td><td class="num">{{ indicateurs.nombres_ronds }}</td></tr>
+        <tr><td>Part de nombres ronds</td><td class="num">{{ '%.1f'|format(indicateurs.part_nombres_ronds*100) }} %</td></tr>
+        <tr><td>Montants dupliqués (distincts)</td><td class="num">{{ indicateurs.nb_montants_dupliques }}</td></tr>
+      </table>
+      {% if indicateurs.top_doublons %}
+      <p class="small" style="margin-top:.5rem"><strong>Doublons les plus fréquents :</strong></p>
+      <ul class="small" style="margin-left:1rem">
+        {% for montant, nb in indicateurs.top_doublons %}<li>{{ '{:,.2f}'.format(montant).replace(',', ' ') }} → {{ nb }} fois</li>{% endfor %}
+      </ul>
+      {% endif %}
+      <p class="muted small">Ces signaux sont des pistes d'investigation, non des conclusions.</p>
+    </section>
+  </div>
+  {% endif %}
+
+  <section class="panel">
+    <h2>Analyse des écritures (FEC — NEP 240)</h2>
+    <p class="muted small">Charger le FEC pour détecter structuration (smurfing), habillage de bilan (window dressing), nombres ronds, doublons et contrepassations.</p>
+    <form method="post" action="/missions/{{ mission.id }}/vue/fraude/fec" enctype="multipart/form-data" class="row">
+      <label>Fichier FEC (.txt/.csv) <input type="file" name="fichier" accept=".txt,.csv" required></label>
+      <label>Seuil structuration (€) <input type="text" name="seuil" value="10000" size="8"></label>
+      <button class="btn-primary" type="submit">Analyser</button>
+    </form>
+
+    {% if fec_fraude %}
+    <table class="mini" style="margin-top:.6rem">
+      <tr><td>Écritures analysées</td><td class="num">{{ fec_fraude.n }}</td></tr>
+      <tr><td>Structuration : montants dans [{{ '{:,.0f}'.format(fec_fraude.structuration.borne_basse).replace(',', ' ') }} ; {{ '{:,.0f}'.format(fec_fraude.structuration.seuil).replace(',', ' ') }}[ €</td>
+          <td class="num"><span class="niv {% if fec_fraude.structuration.nb %}niv-eleve{% else %}niv-faible{% endif %}">{{ fec_fraude.structuration.nb }}</span></td></tr>
+      {% if fec_fraude.window_dressing.applicable %}
+      <tr><td>Window dressing : part des mouvements sur les {{ fec_fraude.window_dressing.jours }} j avant clôture</td>
+          <td class="num"><span class="niv {% if fec_fraude.window_dressing.suspicion %}niv-critique{% else %}niv-faible{% endif %}">{{ '%.1f'|format(fec_fraude.window_dressing.part*100) }} %</span></td></tr>
+      {% endif %}
+      <tr><td>Nombres ronds</td><td class="num">{{ fec_fraude.nombres_ronds.nb }} ({{ '%.1f'|format(fec_fraude.nombres_ronds.part*100) }} %)</td></tr>
+      <tr><td>Montants dupliqués (distincts)</td><td class="num">{{ fec_fraude.doublons.nb }}</td></tr>
+      <tr><td>Contrepassations (débit/crédit opposés, même compte)</td><td class="num">{{ fec_fraude.contrepassations.nb }}</td></tr>
+      {% if fec_fraude.tva.applicable %}
+      <tr><td>Cohérence TVA : taux collecté implicite (TVA collectée / CA)</td>
+          <td class="num"><span class="niv {% if fec_fraude.tva.plausible %}niv-faible{% else %}niv-eleve{% endif %}">{{ '%.1f'|format(fec_fraude.tva.taux_implicite*100) }} %{% if not fec_fraude.tva.plausible %} — à justifier{% endif %}</span></td></tr>
+      {% endif %}
+      {% if fec_fraude.tiers.fournisseurs_nb %}
+      <tr><td>Fournisseurs (auxiliaires 401) : concentration du premier</td>
+          <td class="num"><span class="niv {% if fec_fraude.tiers.fournisseurs_top_part > 0.5 %}niv-eleve{% else %}niv-faible{% endif %}">{{ '%.1f'|format(fec_fraude.tiers.fournisseurs_top_part*100) }} %</span> sur {{ fec_fraude.tiers.fournisseurs_nb }}</td></tr>
+      <tr><td>Fournisseurs à montants exclusivement ronds</td>
+          <td class="num"><span class="niv {% if fec_fraude.tiers.fournisseurs_ronds_nb %}niv-eleve{% else %}niv-faible{% endif %}">{{ fec_fraude.tiers.fournisseurs_ronds_nb }}</span></td></tr>
+      <tr><td>Fournisseurs à écriture unique de montant élevé</td>
+          <td class="num"><span class="niv {% if fec_fraude.tiers.fournisseurs_uniques_eleves_nb %}niv-eleve{% else %}niv-faible{% endif %}">{{ fec_fraude.tiers.fournisseurs_uniques_eleves_nb }}</span></td></tr>
+      {% endif %}
+      {% if fec_fraude.tiers.salaries_nb %}
+      <tr><td>Salariés (auxiliaires 421) — montants nets partagés par ≥ 3 salariés</td>
+          <td class="num">{{ fec_fraude.tiers.salaires_identiques_partages_nb }} sur {{ fec_fraude.tiers.salaries_nb }} salariés</td></tr>
+      {% endif %}
+    </table>
+    {% if fec_fraude.structuration.exemples %}
+    <p class="small" style="margin-top:.5rem"><strong>Exemples de structuration :</strong>
+      {% for compte, montant in fec_fraude.structuration.exemples %}<span class="chip">{{ compte }} · {{ '{:,.0f}'.format(montant).replace(',', ' ') }} €</span>{% endfor %}</p>
+    {% endif %}
+    {% if fec_signaux_nb is not none %}
+    <p style="margin-top:.6rem"><strong>Vigilance fraude :</strong>
+      <span class="niv {% if fec_signaux_nb == 0 %}niv-faible{% elif fec_signaux_nb <= 2 %}niv-eleve{% else %}niv-critique{% endif %}">{{ fec_signaux_nb }} signal(aux) déclenché(s)</span>
+      {% if fec_signaux_libelles %}— {{ fec_signaux_libelles | join(', ') }}{% endif %}.
+      <span class="muted">Indicateur agrégé (NEP 240), ne préjuge d'aucune fraude ; requiert le jugement de l'auditeur.</span></p>
+    {% endif %}
+    <p class="muted small">Signaux non probants (NEP 240) : pistes d'investigation, jamais des conclusions d'audit.</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

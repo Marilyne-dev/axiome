@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ cycle.code }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions/{{ mission }}/vue/cycles">← Cycles</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ cycle.libelle }} <span class="tag">{{ cycle.code }}</span></h1>
+    <div class="chips">
+      <span class="chip">Procédures faites : {{ faits }} / {{ procedures|length }}</span>
+      <a class="chip" style="text-decoration:none" href="/missions/{{ mission }}/excel/{{ cycle.code }}">Dossier Excel ↓</a>
+    </div>
+  </div>
+
+  <!-- Programme de travail -->
+  <section class="panel">
+    <h2>Programme de travail</h2>
+    {% if not procedures %}
+      <p class="muted">Aucune procédure.
+      {% if modele_dispo %}Un modèle standard est disponible pour ce cycle.{% endif %}</p>
+    {% endif %}
+    {% if modele_dispo %}
+    <form method="post" action="/missions/{{ mission }}/vue/cycles/{{ cycle.id }}/programme" style="margin-bottom:.8rem">
+      <button class="btn-primary" type="submit">Générer les procédures standard</button>
+    </form>
+    {% endif %}
+    {% if procedures %}
+    <table class="grid">
+      <thead><tr><th>Réf.</th><th>Procédure</th><th>Assertion</th><th>Fait</th></tr></thead>
+      <tbody>
+        {% for p in procedures %}
+        <tr class="{% if p.fait %}done{% endif %}">
+          <td>{{ p.reference }}</td><td>{{ p.libelle }}</td><td>{{ p.assertion }}</td>
+          <td>
+            <form method="post" action="/missions/{{ mission }}/vue/cycles/{{ cycle.id }}/procedures/{{ p.id }}/toggle">
+              <button class="btn-sm" type="submit">{% if p.fait %}✓ fait{% else %}À faire{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </section>
+
+  <!-- Contrôle interne (COSO) -->
+  <section class="panel">
+    <h2>Contrôle interne (COSO)</h2>
+    <table class="grid">
+      <thead><tr><th>Composante</th><th>Intitulé</th><th>Conclusion</th></tr></thead>
+      <tbody>
+        {% for ci in controles %}
+        <tr><td>{{ ci.composante_coso }}</td><td>{{ ci.intitule }}</td>
+            <td><span class="niv {% if ci.conclusion=='deficient' %}niv-critique{% elif ci.conclusion=='efficace' %}niv-faible{% else %}niv-modere{% endif %}">{{ ci.conclusion }}</span></td></tr>
+        {% else %}
+        <tr><td colspan="3" class="muted">Aucun contrôle décrit.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post" action="/missions/{{ mission }}/vue/cycles/{{ cycle.id }}/controle" style="margin-top:.8rem">
+      <div class="grid2">
+        <label>Intitulé du contrôle <input type="text" name="intitule" required></label>
+        <label>Composante COSO
+          <select name="composante_coso">
+            <option value="environnement_controle">Environnement de contrôle</option>
+            <option value="evaluation_risques">Évaluation des risques</option>
+            <option value="activites_controle" selected>Activités de contrôle</option>
+            <option value="information_communication">Information & communication</option>
+            <option value="pilotage">Pilotage</option>
+          </select></label>
+        <label>Conclusion
+          <select name="conclusion">
+            <option value="a_tester" selected>À tester</option>
+            <option value="efficace">Efficace</option>
+            <option value="deficient">Déficient</option>
+          </select></label>
+      </div>
+      <button class="btn-primary" type="submit">Ajouter le contrôle</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

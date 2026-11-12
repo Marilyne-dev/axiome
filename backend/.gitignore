@@ -1,0 +1,5 @@
+.env
+axiome.db
+demo_requests.json
+.venv/
+__pycache__/

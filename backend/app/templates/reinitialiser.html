@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Réinitialiser le mot de passe · AXIOME{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+    <h1>Nouveau mot de passe</h1>
+    {% if not ok %}
+      <div class="alert">Lien de réinitialisation invalide ou expiré.</div>
+      <p class="muted small"><a class="link" href="/mot-de-passe-oublie">Demander un nouveau lien</a></p>
+    {% else %}
+      {% if err == 'mdp' %}<div class="alert">Mot de passe trop court (8 caractères minimum).</div>{% endif %}
+      <form method="post" action="/reinitialiser" autocomplete="off">
+        <input type="hidden" name="token" value="{{ token }}">
+        <label>Nouveau mot de passe<input type="password" name="password" required minlength="8"></label>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </form>
+    {% endif %}
+  </div>
+  <p class="foot">© 2026 AXIOME</p>
+</div>
+{% endblock %}

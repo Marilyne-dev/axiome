@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Échantillonnage · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.echantillonnage', lang) }}</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span></div>
+  </div>
+
+  {% if not blocs %}
+  <section class="panel"><p class="muted">Aucun cycle. Créez les cycles depuis l'espace de travail.</p></section>
+  {% endif %}
+
+  {% for b in blocs %}
+  <section class="panel">
+    <h2>{{ b.cycle.code }} — {{ b.cycle.libelle }}</h2>
+
+    {% for sp in b.samples %}
+    <div class="doc-preview">
+      <strong>Échantillon #{{ sp.s.id }}</strong> · méthode {{ sp.s.methode }} · taille indicative <b>{{ sp.s.taille }}</b>
+      <table class="mini">
+        {% for it in sp.items %}
+        <tr>
+          <td>{{ it.reference_piece }}</td>
+          <td class="num">{{ '{:,.2f}'.format(it.montant).replace(',', ' ') }} {{ it.devise }}</td>
+          <td>
+            <form method="post" action="/missions/{{ mission.id }}/vue/echantillonnage/item/{{ it.id }}/conclusion" class="row">
+              <select name="conclusion" onchange="this.form.submit()">
+                {% for c in ['a_tester','ok','anomalie'] %}<option value="{{ c }}" {% if it.conclusion == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% else %}<tr><td class="muted">Aucun élément sélectionné.</td></tr>{% endfor %}
+      </table>
+      <form method="post" action="/missions/{{ mission.id }}/vue/echantillonnage/sample/{{ sp.s.id }}/item" class="row">
+        <input type="text" name="reference_piece" placeholder="Réf. pièce" required>
+        <input type="text" name="montant" placeholder="Montant">
+        <button class="btn-sm" type="submit">+ Élément</button>
+      </form>
+    </div>
+    {% endfor %}
+
+    <form method="post" action="/missions/{{ mission.id }}/vue/echantillonnage/cycle/{{ b.cycle.id }}/sample" class="sampler">
+      <div class="row">
+        <label class="fld">Méthode
+          <select name="methode" data-methode>
+            <option value="aleatoire">Aléatoire</option>
+            <option value="mus">MUS (unités monétaires)</option>
+            <option value="attributs">Attributs</option>
+          </select>
+        </label>
+        <span data-mus style="display:none">
+          <input type="text" name="valeur_population" placeholder="Valeur population">
+          <input type="text" name="seuil_tolerable" placeholder="Seuil tolérable">
+        </span>
+        <span data-attr style="display:none">
+          <input type="text" name="taux_tolerable" placeholder="Taux tolérable (ex. 0.05)">
+        </span>
+        <span data-alea><input type="text" name="taille" placeholder="Taille (jugement)"></span>
+        <input type="text" name="confiance" placeholder="Confiance (0.95)" value="0.95" style="width:120px">
+        <button class="btn-sm" type="submit">Créer l'échantillon</button>
+      </div>
+    </form>
+  </section>
+  {% endfor %}
+  <p class="muted small">Les tailles sont indicatives (NEP 530 / ISA 530) et restent soumises au jugement professionnel.</p>
+</main>
+<script>
+document.querySelectorAll('form.sampler').forEach(function (f) {
+  var sel = f.querySelector('[data-methode]');
+  function maj() {
+    f.querySelector('[data-mus]').style.display = sel.value === 'mus' ? '' : 'none';
+    f.querySelector('[data-attr]').style.display = sel.value === 'attributs' ? '' : 'none';
+    f.querySelector('[data-alea]').style.display = sel.value === 'aleatoire' ? '' : 'none';
+  }
+  sel.addEventListener('change', maj); maj();
+});
+</script>
+{% endblock %}

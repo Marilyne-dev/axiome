@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}LCB‑FT · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/dashboard">Tableau de bord</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>🔒 LCB‑FT — Dossiers</h1>
+    <div class="chips"><span class="chip">Confidentiel — accès correspondant</span></div></div>
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>Client</th><th>Dossier</th><th>Niveau de risque</th><th></th></tr></thead>
+      <tbody>
+        {% for l in lignes %}
+        <tr>
+          <td>{{ l.client.raison_sociale }}</td>
+          <td>{% if l.dossier %}<span class="badge">ouvert</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{% if l.dossier %}<span class="niv {% if l.dossier.niveau_risque=='eleve' %}niv-critique{% elif l.dossier.niveau_risque=='faible' %}niv-faible{% else %}niv-modere{% endif %}">{{ l.dossier.niveau_risque }}</span>{% else %}—{% endif %}</td>
+          <td>
+            {% if l.dossier %}
+            <a class="btn-sm" href="/vue/lcbft/{{ l.dossier.id }}">Ouvrir →</a>
+            {% else %}
+            <form method="post" action="/vue/lcbft" style="display:inline">
+              <input type="hidden" name="client_id" value="{{ l.client.id }}">
+              <button class="btn-sm" type="submit">Ouvrir un dossier</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Aucun client.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

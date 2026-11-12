@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Rapprochement bancaire · {{ mission.intitule }}{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.rapprochement', lang) }}</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span>
+      {% if cadrage %}
+      <span class="chip {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">Écart global : {{ '{:,.2f}'.format(cadrage.ecart_global).replace(',', ' ') }}</span>
+      <span class="chip">{{ cadrage.lignes_avec_ecart }} ligne(s) avec écart</span>
+      <span class="chip">{{ cadrage.non_valides }} non validée(s)</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not rows %}
+  <section class="panel">
+    <p class="muted">Aucune ligne. Initialisez le rapprochement à partir des comptes de trésorerie de la balance importée.</p>
+    <form method="post" action="/missions/{{ mission.id }}/vue/rapprochement/init">
+      <button class="btn-primary" type="submit">Initialiser depuis la balance</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="panel">
+    <form method="post" action="/missions/{{ mission.id }}/vue/rapprochement/save">
+      <table class="grid saisie">
+        <thead><tr>
+          <th>Compte</th><th>Libellé</th><th>Solde comptable</th><th>Solde relevé</th>
+          <th>Écart</th><th>Validé</th><th>Commentaire</th>
+        </tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr data-row="{{ r.id }}">
+            <td>{{ r.compte }}</td>
+            <td>{{ r.libelle }}</td>
+            <td class="num compta" data-v="{{ r.solde_comptable }}">{{ '{:,.2f}'.format(r.solde_comptable).replace(',', ' ') }}</td>
+            <td><input class="in-num releve" type="text" name="releve_{{ r.id }}" value="{{ '%.2f'|format(r.solde_releve) }}"></td>
+            <td class="num ecart {% if r.ecart|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.2f}'.format(r.ecart).replace(',', ' ') }}</td>
+            <td style="text-align:center"><input type="checkbox" name="valide_{{ r.id }}" {% if r.valide %}checked{% endif %}></td>
+            <td><input class="in-text" type="text" name="comm_{{ r.id }}" value="{{ r.commentaire }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="2">TOTAL</td>
+            <td class="num">{{ '{:,.2f}'.format(cadrage.total_comptable).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.2f}'.format(cadrage.total_releve).replace(',', ' ') }}</td>
+            <td class="num {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.2f}'.format(cadrage.ecart_global).replace(',', ' ') }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button class="btn-primary" type="submit" style="margin-top:.8rem">Enregistrer le rapprochement</button>
+    </form>
+    <p class="muted small">L'écart se recalcule à l'écran pendant la saisie ; l'enregistrement le fige et met à jour le cadrage.</p>
+  </section>
+  {% endif %}
+</main>
+<script>
+// Recalcul visuel de l'écart pendant la saisie (comptable - relevé)
+document.querySelectorAll('tr[data-row]').forEach(function (tr) {
+  var compta = parseFloat(tr.querySelector('.compta').dataset.v) || 0;
+  var releveInput = tr.querySelector('.releve');
+  var ecartCell = tr.querySelector('.ecart');
+  function maj() {
+    var releve = parseFloat((releveInput.value || '0').replace(',', '.')) || 0;
+    var e = compta - releve;
+    ecartCell.textContent = e.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    ecartCell.classList.toggle('alert-v', Math.abs(e) >= 0.01);
+  }
+  releveInput.addEventListener('input', maj);
+});
+</script>
+{% endblock %}

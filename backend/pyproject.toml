@@ -1,0 +1,21 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+# Les avertissements de notre code deviennent des erreurs (qualité) ; on ignore
+# uniquement les dépréciations internes au client de test Starlette/httpx (hors AXIOME).
+filterwarnings = [
+    "error",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+    "ignore:Setting per-request cookies:DeprecationWarning",
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# Anti-bugs (pyflakes) + erreurs pycodestyle. Style compact assumé : E702 (point-virgule)
+# et E741 (noms courts du domaine : l = ligne, d = chiffre) volontairement tolérés.
+select = ["F", "E", "W", "I"]
+ignore = ["E702", "E741", "E501"]

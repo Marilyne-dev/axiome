@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Activation du compte · AXIOME{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+    <h1>Activer votre compte</h1>
+    {% if not ok %}
+      <div class="alert">Lien d'invitation invalide ou expiré. Rapprochez-vous de votre administrateur.</div>
+    {% else %}
+      {% if err == 'mdp' %}<div class="alert">Mot de passe trop court (8 caractères minimum).</div>{% endif %}
+      <p class="muted small">Compte : <b>{{ email }}</b></p>
+      <form method="post" action="/activer" autocomplete="off">
+        <input type="hidden" name="token" value="{{ token }}">
+        <label>Nom complet<input type="text" name="nom_complet" placeholder="Prénom Nom"></label>
+        <label>Mot de passe<input type="password" name="password" required minlength="8"></label>
+        <button type="submit" class="btn-primary">Activer mon compte</button>
+      </form>
+    {% endif %}
+  </div>
+  <p class="foot">© 2026 AXIOME</p>
+</div>
+{% endblock %}

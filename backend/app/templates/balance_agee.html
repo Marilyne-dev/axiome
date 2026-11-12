@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Balance âgée {{ libelle }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>Balance âgée — {{ libelle }}</h1>
+    <div class="chips">
+      {% if cadrage %}
+      <span class="chip {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">Écart de cadrage : {{ '{:,.2f}'.format(cadrage.ecart_global).replace(',', ' ') }}</span>
+      <span class="chip">{{ cadrage.lignes_desequilibrees }} ligne(s) déséquilibrée(s)</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not rows %}
+  <section class="panel">
+    <p class="muted">Aucune ligne. Initialisez la balance âgée depuis les comptes de tiers de la balance importée.</p>
+    <form method="post" action="/missions/{{ mission }}/vue/balance-agee/{{ cycle }}/init">
+      <button class="btn-primary" type="submit">Initialiser depuis la balance</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="panel">
+    <form method="post" action="/missions/{{ mission }}/vue/balance-agee/{{ cycle }}/save">
+      <table class="grid saisie">
+        <thead><tr>
+          <th>Compte</th><th>Libellé</th><th>Solde</th>
+          <th>Non échu</th><th>0–30 j</th><th>30–60 j</th><th>60–90 j</th><th>&gt; 90 j</th>
+          <th>Écart</th><th>Commentaire</th>
+        </tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr data-row="{{ r.id }}">
+            <td>{{ r.compte }}</td><td>{{ r.libelle }}</td>
+            <td class="num solde" data-v="{{ r.solde_comptable }}">{{ '{:,.2f}'.format(r.solde_comptable).replace(',', ' ') }}</td>
+            <td><input class="in-num tr" data-b type="text" name="non_echu_{{ r.id }}" value="{{ '%.2f'|format(r.non_echu) }}"></td>
+            <td><input class="in-num tr" data-b type="text" name="e30_{{ r.id }}" value="{{ '%.2f'|format(r.echu_30) }}"></td>
+            <td><input class="in-num tr" data-b type="text" name="e60_{{ r.id }}" value="{{ '%.2f'|format(r.echu_60) }}"></td>
+            <td><input class="in-num tr" data-b type="text" name="e90_{{ r.id }}" value="{{ '%.2f'|format(r.echu_90) }}"></td>
+            <td><input class="in-num tr" data-b type="text" name="eplus_{{ r.id }}" value="{{ '%.2f'|format(r.echu_plus) }}"></td>
+            <td class="num ecart {% if r.ecart|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.2f}'.format(r.ecart).replace(',', ' ') }}</td>
+            <td><input class="in-text" type="text" name="comm_{{ r.id }}" value="{{ r.commentaire }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="2">TOTAL</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.solde_comptable).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.non_echu).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.echu_30).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.echu_60).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.echu_90).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.echu_plus).replace(',', ' ') }}</td>
+            <td class="num {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.0f}'.format(cadrage.ecart_global).replace(',', ' ') }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button class="btn-primary" type="submit" style="margin-top:.8rem">Enregistrer la balance âgée</button>
+    </form>
+    <p class="muted small">L'écart (solde − somme des tranches) se recalcule à l'écran ; il doit tendre vers zéro.</p>
+  </section>
+  {% endif %}
+</main>
+<script>
+document.querySelectorAll('tr[data-row]').forEach(function (tr) {
+  var solde = parseFloat(tr.querySelector('.solde').dataset.v) || 0;
+  var ecartCell = tr.querySelector('.ecart');
+  function maj() {
+    var somme = 0;
+    tr.querySelectorAll('input[data-b]').forEach(function (i) {
+      somme += parseFloat((i.value || '0').replace(',', '.')) || 0;
+    });
+    var e = solde - somme;
+    ecartCell.textContent = e.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    ecartCell.classList.toggle('alert-v', Math.abs(e) >= 0.01);
+  }
+  tr.querySelectorAll('input[data-b]').forEach(function (i) { i.addEventListener('input', maj); });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Offres · Console AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span>
+    <span class="pill">Console éditeur</span></div>
+  <nav>
+    <a class="link" href="/console">Cabinets</a>
+    <a class="link" href="/console/abonnements">Abonnements</a>
+    <a class="link" href="/console/offres"><b>Offres</b></a>
+    <span class="pill pill-role">{{ user.nom_complet }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Facturation</div>
+      <h1>Offres commerciales</h1>
+    </div>
+  </div>
+  {% if msg %}<div class="banner ok">{{ msg }}</div>{% endif %}
+  {% if err %}<div class="banner banner-warn">{{ err }}</div>{% endif %}
+  <p class="muted small">Les nouveaux prix s'appliquent aux <b>prochains</b> paiements, jamais rétroactivement. Quotas : 0 = illimité.
+    Les collaborateurs décomptés n'incluent pas l'administrateur du cabinet. Prix EUR en euros (ex. 149,00), prix XOF en francs CFA.</p>
+
+  {% for v in plans %}
+  <section class="panel">
+    <h2>{{ v.plan.nom }} <span class="tag">{{ v.plan.code }}</span>
+      {% if not v.plan.is_active %}<span class="niv niv-eleve">Désactivée</span>{% endif %}
+      {% if v.plan.is_featured %}<span class="niv niv-faible">Mise en avant</span>{% endif %}</h2>
+    <form method="post" action="/console/offres/{{ v.plan.id }}" class="stack">
+      <div class="grid2">
+        <label>Nom <input type="text" name="nom" value="{{ v.plan.nom }}" required></label>
+        <label>Description courte <input type="text" name="description" value="{{ v.plan.description }}" maxlength="255"></label>
+      </div>
+      <div class="grid2">
+        <label>Prix mensuel (€) <input type="text" name="prix_mensuel_eur" value="{{ v.eur_m }}" inputmode="decimal"></label>
+        <label>Prix annuel (€) <input type="text" name="prix_annuel_eur" value="{{ v.eur_a }}" inputmode="decimal"></label>
+      </div>
+      <div class="grid2">
+        <label>Prix mensuel (FCFA) <input type="number" name="prix_mensuel_xof" value="{{ v.plan.prix_mensuel_xof }}" min="0"></label>
+        <label>Prix annuel (FCFA) <input type="number" name="prix_annuel_xof" value="{{ v.plan.prix_annuel_xof }}" min="0"></label>
+      </div>
+      <div class="grid2">
+        <label>Collaborateurs (hors administrateur, 0 = illimité) <input type="number" name="quota_collaborateurs" value="{{ v.plan.quota_collaborateurs }}" min="0"></label>
+        <label>Missions en cours (0 = illimité) <input type="number" name="quota_missions" value="{{ v.plan.quota_missions }}" min="0"></label>
+      </div>
+      <label>Fonctionnalités (une par ligne)
+        <textarea name="fonctionnalites" rows="5">{{ v.lignes }}</textarea></label>
+      <div class="grid2">
+        <label>Ordre d'affichage <input type="number" name="ordre" value="{{ v.plan.ordre }}" min="0"></label>
+        <div>
+          <label><input type="checkbox" name="is_featured" {% if v.plan.is_featured %}checked{% endif %}> Mettre en avant (« Le plus choisi »)</label><br>
+          <label><input type="checkbox" name="is_active" {% if v.plan.is_active %}checked{% endif %}> Offre active (visible et souscriptible)</label><br>
+          <label><input type="checkbox" name="appliquer_aux_cabinets"> Appliquer ces quotas aux cabinets déjà abonnés à cette offre</label>
+        </div>
+      </div>
+      <button class="btn-primary" type="submit">Enregistrer</button>
+    </form>
+  </section>
+  {% endfor %}
+
+  <section class="panel">
+    <h2>Créer une nouvelle offre</h2>
+    <form method="post" action="/console/offres" class="stack">
+      <div class="grid2">
+        <label>Code (identifiant, ex. « premium ») <input type="text" name="code" required pattern="[A-Za-z0-9_-]+"></label>
+        <label>Nom <input type="text" name="nom" required></label>
+      </div>
+      <label>Description courte <input type="text" name="description" maxlength="255"></label>
+      <div class="grid2">
+        <label>Prix mensuel (€) <input type="text" name="prix_mensuel_eur" value="0" inputmode="decimal"></label>
+        <label>Prix annuel (€) <input type="text" name="prix_annuel_eur" value="0" inputmode="decimal"></label>
+      </div>
+      <div class="grid2">
+        <label>Prix mensuel (FCFA) <input type="number" name="prix_mensuel_xof" value="0" min="0"></label>
+        <label>Prix annuel (FCFA) <input type="number" name="prix_annuel_xof" value="0" min="0"></label>
+      </div>
+      <div class="grid2">
+        <label>Collaborateurs (0 = illimité) <input type="number" name="quota_collaborateurs" value="0" min="0"></label>
+        <label>Missions en cours (0 = illimité) <input type="number" name="quota_missions" value="0" min="0"></label>
+      </div>
+      <label>Fonctionnalités (une par ligne) <textarea name="fonctionnalites" rows="4"></textarea></label>
+      <div class="grid2">
+        <label>Ordre d'affichage <input type="number" name="ordre" value="4" min="0"></label>
+        <label><input type="checkbox" name="is_active" checked> Offre active</label>
+      </div>
+      <button class="btn-primary" type="submit">Créer l'offre</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

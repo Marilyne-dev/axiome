@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Abonnements · Console AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span>
+    <span class="pill">Console éditeur</span></div>
+  <nav>
+    <a class="link" href="/console">Cabinets</a>
+    <a class="link" href="/console/abonnements"><b>Abonnements</b></a>
+    <a class="link" href="/console/offres">Offres</a>
+    <span class="pill pill-role">{{ user.nom_complet }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Facturation</div>
+      <h1>Abonnements et paiements</h1>
+    </div>
+  </div>
+  {% if msg %}<div class="banner ok">{{ msg }}</div>{% endif %}
+
+  <div class="cards">
+    <div class="card"><div class="card-k">Actifs</div><div class="card-v">{{ comptes.get('actif', 0) }}</div></div>
+    <div class="card"><div class="card-k">En attente de paiement</div><div class="card-v">{{ comptes.get('en_attente_paiement', 0) }}</div></div>
+    <div class="card"><div class="card-k">Expirés</div><div class="card-v">{{ comptes.get('expire', 0) }}</div></div>
+    <div class="card"><div class="card-k">Suspendus / résiliés</div><div class="card-v">{{ comptes.get('suspendu', 0) + comptes.get('resilie', 0) }}</div></div>
+  </div>
+
+  <section class="panel">
+    <h2>Un abonnement par cabinet <span class="chip">{{ lignes | length }}</span></h2>
+    <p class="muted small">Filtrer :
+      <a class="link" href="/console/abonnements">Tous</a> ·
+      <a class="link" href="/console/abonnements?statut=actif">Actifs</a> ·
+      <a class="link" href="/console/abonnements?statut=expire">Expirés</a> ·
+      <a class="link" href="/console/abonnements?statut=en_attente_paiement">En attente</a>
+      {% if filtre %}— filtre actuel : <b>{{ filtre }}</b>{% endif %}</p>
+    <table class="grid">
+      <thead><tr><th>Cabinet</th><th>Offre</th><th>Période</th><th>État</th><th>Échéance</th><th>Dernier paiement</th><th class="num">En attente</th></tr></thead>
+      <tbody>
+        {% for l in lignes %}
+        <tr>
+          <td><b>{{ l.cabinet.nom }}</b></td>
+          <td>{% if l.plan %}{{ l.plan.nom }}{% else %}<span class="muted">Configuré par l'éditeur</span>{% endif %}</td>
+          <td>{% if l.abo %}{{ 'Annuelle' if l.abo.periode == 'annuel' else 'Mensuelle' }} · {{ l.abo.devise }}{% else %}—{% endif %}</td>
+          <td>
+            {% if l.statut == 'actif' %}<span class="niv niv-faible">Actif</span>
+            {% elif l.statut == 'expire' %}<span class="niv niv-critique">Expiré</span>
+            {% elif l.statut == 'en_attente_paiement' %}<span class="niv niv-modere">En attente de paiement</span>
+            {% elif l.statut == 'sans_abonnement' %}<span class="tag">Sans abonnement</span>
+            {% else %}<span class="niv niv-eleve">{{ l.statut }}</span>{% endif %}
+          </td>
+          <td>
+            {% if l.abo and l.abo.date_fin %}{{ l.abo.date_fin.strftime('%d/%m/%Y') }}
+              {% if l.jours is not none %}<span class="muted small">
+                {% if l.jours < 0 %}(dépassée de {{ -l.jours }} j){% else %}(dans {{ l.jours }} j){% endif %}</span>{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>{% if l.dernier %}{{ fmt_montant(l.dernier.montant, l.dernier.devise) }}
+            <span class="muted small">le {{ l.dernier.paye_le.strftime('%d/%m/%Y') if l.dernier.paye_le }}</span>{% else %}—{% endif %}</td>
+          <td class="num">{{ l.en_attente }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted">Aucun abonnement.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Derniers paiements <span class="chip">{{ paiements | length }}</span></h2>
+    <table class="grid">
+      <thead><tr><th>Date</th><th>Cabinet</th><th>Offre</th><th>Type</th><th>Montant</th><th>Moyen</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for x in paiements %}
+        <tr>
+          <td>{{ (x.p.paye_le or x.p.created_at).strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ x.cabinet }}</td>
+          <td>{{ x.plan }}</td>
+          <td>{% if x.changement %}Changement d'offre{% else %}Abonnement / renouvellement{% endif %} · {{ 'annuel' if x.p.periode == 'annuel' else 'mensuel' }}</td>
+          <td><b>{{ fmt_montant(x.p.montant, x.p.devise) }}</b></td>
+          <td>{{ x.p.fournisseur or '—' }}</td>
+          <td>
+            {% if x.p.statut == 'paye' %}<span class="niv niv-faible">Payé</span>
+            {% elif x.p.statut == 'echoue' %}<span class="niv niv-eleve">Échoué / annulé</span>
+            {% else %}<span class="niv niv-modere">En attente</span>{% endif %}
+          </td>
+          <td>
+            {% if x.p.fournisseur == 'virement' and x.p.statut == 'en_attente' %}
+            <form method="post" action="/console/paiements/{{ x.p.reference }}/confirmer-virement" style="display:inline"
+                  onsubmit="return confirm('Confirmer que ce virement a bien été reçu sur le compte bancaire ?')">
+              <button class="btn-sm" type="submit">Confirmer le virement reçu</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="muted">Aucun paiement.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Montants EUR en euros, XOF en francs CFA. Un virement n'est activé qu'après votre confirmation.</p>
+  </section>
+</main>
+{% endblock %}

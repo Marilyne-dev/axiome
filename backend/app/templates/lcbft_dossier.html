@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Dossier LCB‑FT · {{ client.raison_sociale }}{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/vue/lcbft">{{ t('nav.back_file', lang) }}s LCB‑FT</a>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>🔒 {{ client.raison_sociale }}</h1>
+    <div class="chips">
+      <span class="niv {% if d.niveau_risque=='eleve' %}niv-critique{% elif d.niveau_risque=='faible' %}niv-faible{% else %}niv-modere{% endif %}">Risque {{ d.niveau_risque }}</span>
+      {% if d.ppe %}<span class="chip" style="background:#b02a37;color:#fff">PPE détectée</span>{% endif %}
+      <span class="chip">{{ d.declarations|length }} déclaration(s)</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Classification du risque</h2>
+      <form method="post" action="/vue/lcbft/{{ d.id }}/classification">
+        <label class="chk"><input type="checkbox" name="pays_a_risque"> Pays à risque</label>
+        <label class="chk"><input type="checkbox" name="activite_especes"> Activité en espèces</label>
+        <label class="chk"><input type="checkbox" name="ppe"> Personne politiquement exposée (PPE)</label>
+        <label class="chk"><input type="checkbox" name="structure_complexe"> Structure complexe</label>
+        <label class="chk"><input type="checkbox" name="relation_a_distance"> Relation à distance</label>
+        <button class="btn-primary" type="submit">Classer</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Screening PPE / sanctions</h2>
+      <form method="post" action="/vue/lcbft/{{ d.id }}/screening">
+        <label>Nom à vérifier <input type="text" name="nom" required></label>
+        <button class="btn-primary" type="submit">Vérifier</button>
+      </form>
+      {% if screen_nom %}
+      <p class="{% if screen_res=='renforcee' %}alert-v{% endif %}" style="margin-top:.6rem">
+        « {{ screen_nom }} » → vigilance <strong>{{ screen_res }}</strong>
+        {% if screen_res=='renforcee' %}⚠️ correspondance détectée{% endif %}
+      </p>
+      {% endif %}
+      <p class="muted small">Listes de démonstration — à brancher sur les flux officiels (UE/OFAC/ONU).</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Déclarations de soupçon (TRACFIN) — confidentiel</h2>
+    {% if request.query_params.get('tracfin') %}
+    <div class="banner" style="background:#eef7ee;border:1px solid #cfe8cf;color:#245c24">
+      Export TRACFIN préparé (réf. {{ request.query_params.get('tracfin') }}) dans la corbeille de sortie.
+      Transmission officielle ERMES à effectuer par le correspondant.
+    </div>
+    {% endif %}
+    <table class="grid">
+      <thead><tr><th>Référence</th><th>Motif</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for decl in d.declarations %}
+        <tr>
+          <td>{{ decl.reference }}</td><td>{{ decl.motif }}</td>
+          <td><span class="badge">{{ decl.statut }}</span></td>
+          <td class="row">
+            <form method="post" action="/vue/lcbft/{{ d.id }}/declaration/{{ decl.id }}/export-tracfin">
+              <button class="btn-sm" type="submit">Préparer l'export TRACFIN</button>
+            </form>
+            {% if decl.statut != 'transmise' %}
+            <form method="post" action="/vue/lcbft/{{ d.id }}/declaration/{{ decl.id }}/transmise"
+                  onsubmit="return confirm('Confirmez-vous la transmission ERMES effectuée ?')">
+              <button class="btn-sm" type="submit">Marquer transmise</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Aucune déclaration.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">La transmission à TRACFIN se fait via la téléprocédure officielle ERMES
+      (compte déclarant + certificat). AXIOME prépare l'export ; il ne transmet pas automatiquement.</p>
+    <form method="post" action="/vue/lcbft/{{ d.id }}/declaration" style="margin-top:.8rem">
+      <label>Motif du soupçon <input type="text" name="motif" required></label>
+      <button class="btn-primary" type="submit">Créer une déclaration</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

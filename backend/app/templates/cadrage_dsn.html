@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Cadrage DSN · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.dsn', lang) }}</h1>
+    <div class="chips">
+      <span class="chip">{{ mission.intitule }}</span>
+      {% if cadrage %}
+      <span class="chip {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">Écart global : {{ '{:,.2f}'.format(cadrage.ecart_global).replace(',', ' ') }}</span>
+      <span class="chip">{{ cadrage.lignes_en_ecart }} ligne(s) en écart</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not rows %}
+  <section class="panel">
+    <p class="muted">Aucune ligne. Initialisez le cadrage depuis les comptes de personnel (#64x) de la balance importée.</p>
+    <form method="post" action="/missions/{{ mission.id }}/vue/cadrage-dsn/init">
+      <button class="btn-primary" type="submit">Initialiser depuis la balance</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="panel">
+    <form method="post" action="/missions/{{ mission.id }}/vue/cadrage-dsn/save">
+      <table class="grid saisie">
+        <thead><tr>
+          <th>Compte</th><th>Libellé</th><th>Montant FEC</th>
+          <th>Montant DSN</th><th>Écart</th><th>Commentaire</th>
+        </tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr data-row="{{ r.id }}">
+            <td>{{ r.compte }}</td><td>{{ r.libelle }}</td>
+            <td class="num fec" data-v="{{ r.montant_fec }}">{{ '{:,.2f}'.format(r.montant_fec).replace(',', ' ') }}</td>
+            <td><input class="in-num dsn" type="text" name="dsn_{{ r.id }}" value="{{ '%.2f'|format(r.montant_dsn) }}"></td>
+            <td class="num ecart {% if r.ecart|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.2f}'.format(r.ecart).replace(',', ' ') }}</td>
+            <td><input class="in-text" type="text" name="comm_{{ r.id }}" value="{{ r.commentaire }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="2">TOTAL</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.total_fec).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.total_dsn).replace(',', ' ') }}</td>
+            <td class="num {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.0f}'.format(cadrage.ecart_global).replace(',', ' ') }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button class="btn-primary" type="submit" style="margin-top:.8rem">Enregistrer le cadrage</button>
+    </form>
+    <p class="muted small">L'écart (FEC − DSN) se recalcule à l'écran ; il doit tendre vers zéro pour chaque rubrique.</p>
+  </section>
+  {% endif %}
+</main>
+<script>
+document.querySelectorAll('tr[data-row]').forEach(function (tr) {
+  var fec = parseFloat(tr.querySelector('.fec').dataset.v) || 0;
+  var ec = tr.querySelector('.ecart');
+  var dsn = tr.querySelector('.dsn');
+  function maj() {
+    var e = fec - (parseFloat((dsn.value || '0').replace(',', '.')) || 0);
+    ec.textContent = e.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    ec.classList.toggle('alert-v', Math.abs(e) >= 0.01);
+  }
+  dsn.addEventListener('input', maj);
+});
+</script>
+{% endblock %}

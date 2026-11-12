@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Pilotage · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/dashboard">Tableau de bord</a>
+       <a class="link" href="/missions">Missions</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <h1>{{ t('page.pilotage', lang) }}</h1>
+
+  <section class="cards">
+    <div class="card"><div class="card-k">Missions actives</div><div class="card-v">{{ s.nb_missions }}</div></div>
+    <div class="card"><div class="card-k">Clients</div><div class="card-v">{{ s.nb_clients }}</div></div>
+    <div class="card"><div class="card-k">Missions avec anomalies</div>
+      <div class="card-v {% if s.missions_avec_anomalies %}alert-v{% endif %}">{{ s.missions_avec_anomalies }}</div></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Répartition par référentiel</h2>
+      <table class="mini">
+        {% for ref, n in s.par_referentiel.items() %}
+        <tr><td>{{ ref }}</td><td class="num">{{ n }}</td></tr>
+        {% else %}<tr><td class="muted">Aucune mission.</td></tr>{% endfor %}
+      </table>
+    </section>
+    <section class="panel">
+      <h2>Risques par niveau (tous dossiers)</h2>
+      <table class="mini">
+        <tr><td><span class="niv niv-faible">faible</span></td><td class="num">{{ s.risques_par_niveau.faible }}</td></tr>
+        <tr><td><span class="niv niv-modere">modéré</span></td><td class="num">{{ s.risques_par_niveau.modere }}</td></tr>
+        <tr><td><span class="niv niv-eleve">élevé</span></td><td class="num">{{ s.risques_par_niveau.eleve }}</td></tr>
+        <tr><td><span class="niv niv-critique">critique</span></td><td class="num">{{ s.risques_par_niveau.critique }}</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Avancement par mission</h2>
+    <table class="grid">
+      <thead><tr><th>Mission</th><th>Réf.</th><th>Avancement</th><th>Conclusions</th>
+        <th>Anomalies</th><th>Risques</th><th>Risque max</th><th>CI déficients</th></tr></thead>
+      <tbody>
+        {% for l in s.lignes %}
+        <tr>
+          <td><a class="link" href="/missions/{{ l.mission.id }}/vue">{{ l.mission.intitule }}</a></td>
+          <td><span class="tag">{{ l.mission.referentiel }}</span></td>
+          <td>
+            <div class="bar"><span style="width:{{ l.avancement }}%"></span></div>
+            <span class="small">{{ l.avancement }} %</span>
+          </td>
+          <td class="num">{{ l.nb_conclusions }} / {{ l.nb_cycles }}</td>
+          <td class="num {% if l.nb_anomalies %}alert-v{% endif %}">{{ l.nb_anomalies }}</td>
+          <td class="num">{{ l.nb_risques }}</td>
+          <td>{% if l.risque_max != '—' %}<span class="niv niv-{{ l.risque_max }}">{{ l.risque_max }}</span>{% else %}—{% endif %}</td>
+          <td class="num {% if l.ci_deficients %}alert-v{% endif %}">{{ l.ci_deficients }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="muted">Aucune mission.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

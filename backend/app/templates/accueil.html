@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}AXIOME — L'audit augmenté, maîtrisé et documenté{% endblock %}
+{% block body %}
+<style>
+  :root{ --lp-navy:#0B1533; --lp-navy2:#122048; --lp-blue:#2F5BFF; --lp-blue2:#5B82FF; --lp-gold:#C9A227; }
+  .lp{ font-family:var(--sans,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif); color:#1B2333; }
+  .lp *{ box-sizing:border-box; }
+  .lp a{ text-decoration:none; color:inherit; }
+  .lp-wrap{ max-width:1180px; margin:0 auto; padding:0 24px; }
+
+  /* Topbar */
+  .lp-top{ position:sticky; top:0; z-index:20; background:rgba(255,255,255,.88); backdrop-filter:blur(10px); border-bottom:1px solid #E8ECF3; }
+  .lp-top .lp-wrap{ display:flex; align-items:center; gap:28px; height:68px; }
+  .lp-brand{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px; color:var(--lp-navy); letter-spacing:.2px; }
+  .lp-mark{ width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--lp-blue),#1E3AA8); display:grid; place-items:center; box-shadow:0 4px 14px rgba(47,91,255,.35); }
+  .lp-mark svg{ width:20px; height:20px; }
+  .lp-nav{ display:flex; gap:22px; margin-left:8px; font-weight:600; font-size:14.5px; color:#48526A; }
+  .lp-nav a:hover{ color:var(--lp-navy); }
+  .lp-actions{ margin-left:auto; display:flex; align-items:center; gap:14px; }
+  .lp-link{ font-weight:600; font-size:14.5px; color:#48526A; }
+  .lp-btn{ display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:14.5px; border-radius:999px; padding:11px 20px; transition:.15s; cursor:pointer; border:0; }
+  .lp-btn-primary{ background:var(--lp-blue); color:#fff; box-shadow:0 6px 18px rgba(47,91,255,.32); }
+  .lp-btn-primary:hover{ background:#1E3AA8; }
+  .lp-btn-ghost{ background:#fff; color:var(--lp-navy); border:1.5px solid #D4DBE8; }
+  .lp-btn-ghost:hover{ border-color:var(--lp-blue); color:var(--lp-blue); }
+  .lp-btn-light{ background:rgba(255,255,255,.12); color:#fff; border:1.5px solid rgba(255,255,255,.3); }
+  .lp-btn-light:hover{ background:rgba(255,255,255,.2); }
+
+  /* Hero */
+  .lp-hero{ background:
+      radial-gradient(1100px 500px at 80% -10%, rgba(47,91,255,.35), transparent 60%),
+      radial-gradient(800px 400px at 0% 100%, rgba(124,92,252,.18), transparent 55%),
+      linear-gradient(160deg,var(--lp-navy) 0%, #0E1C44 55%, #0A1230 100%);
+    color:#fff; position:relative; overflow:hidden; }
+  .lp-hero::before{ content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px); background-size:46px 46px; mask-image:radial-gradient(900px 500px at 50% 0%,#000,transparent 75%); }
+  .lp-hero .lp-wrap{ position:relative; display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center; padding:74px 24px 86px; }
+  .lp-pill{ display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#DCE4FF; font-size:13px; font-weight:600; padding:7px 14px; border-radius:999px; }
+  .lp-dot{ width:8px; height:8px; border-radius:50%; background:#3FE08A; box-shadow:0 0 0 4px rgba(63,224,138,.18); }
+  .lp-h1{ font-size:48px; line-height:1.07; font-weight:800; letter-spacing:-1px; margin:20px 0 0; color:#fff; }
+  .lp-h1 .accent{ color:var(--lp-blue2); }
+  .lp-sub{ color:#B9C4E3; font-size:17px; line-height:1.6; margin:18px 0 0; max-width:540px; }
+  .lp-cta{ display:flex; gap:14px; margin-top:30px; flex-wrap:wrap; }
+  .lp-trusttext{ margin-top:26px; color:#8A98C2; font-size:13px; }
+
+  /* Hero product preview */
+  .lp-prev{ background:#fff; border-radius:16px; box-shadow:0 30px 70px rgba(5,12,40,.5); overflow:hidden; color:#1B2333; transform:perspective(1400px) rotateY(-7deg) rotateX(3deg); }
+  .lp-prev-bar{ display:flex; align-items:center; gap:7px; padding:11px 14px; background:#F4F6FB; border-bottom:1px solid #E8ECF3; }
+  .lp-prev-bar i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .lp-prev-title{ margin-left:10px; font-size:12px; color:#6B7488; font-weight:600; }
+  .lp-prev-body{ display:grid; grid-template-columns:150px 1fr; min-height:300px; }
+  .lp-prev-side{ background:var(--lp-navy); color:#C6CFEA; padding:16px 12px; font-size:12.5px; }
+  .lp-prev-side b{ color:#fff; display:block; margin-bottom:14px; font-size:13px; }
+  .lp-prev-side a{ display:block; padding:7px 9px; border-radius:7px; margin-bottom:2px; color:#AEB9D6; }
+  .lp-prev-side a.on{ background:rgba(47,91,255,.9); color:#fff; }
+  .lp-prev-main{ padding:16px; background:#F7F9FC; }
+  .lp-kpis{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .lp-kpi{ background:#fff; border:1px solid #EAEEF5; border-radius:11px; padding:11px 12px; }
+  .lp-kpi .n{ font-size:20px; font-weight:800; color:var(--lp-navy); }
+  .lp-kpi .l{ font-size:11px; color:#7A849B; margin-top:2px; }
+  .lp-kpi .n.b{ color:var(--lp-blue); } .lp-kpi .n.g{ color:#17A673; } .lp-kpi .n.r{ color:#E0533B; }
+  .lp-prev-chart{ display:flex; align-items:center; gap:14px; background:#fff; border:1px solid #EAEEF5; border-radius:11px; padding:14px; margin-top:10px; }
+  .lp-donut{ width:72px; height:72px; border-radius:50%; background:conic-gradient(var(--lp-blue) 0 78%, #E7ECF6 78% 100%); display:grid; place-items:center; flex:none; }
+  .lp-donut span{ width:48px; height:48px; background:#fff; border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:15px; color:var(--lp-navy); }
+  .lp-leg{ font-size:11.5px; color:#5A6479; line-height:1.7; }
+  .lp-leg i{ width:8px; height:8px; border-radius:2px; display:inline-block; margin-right:6px; }
+
+  /* Value pills */
+  .lp-values{ background:#fff; border-bottom:1px solid #EEF1F7; }
+  .lp-values .lp-wrap{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:18px; padding:26px 24px; }
+  .lp-val{ display:flex; align-items:center; gap:11px; font-weight:700; font-size:14px; color:var(--lp-navy); }
+  .lp-vico{ width:40px; height:40px; border-radius:11px; background:var(--lp-blue-soft,#EAF0FF); display:grid; place-items:center; color:var(--lp-blue); flex:none; }
+  .lp-vico svg{ width:20px; height:20px; }
+
+  /* Sections */
+  .lp-sec{ padding:78px 0; }
+  .lp-eyebrow{ color:var(--lp-blue); font-weight:800; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; }
+  .lp-h2{ font-size:34px; font-weight:800; color:var(--lp-navy); letter-spacing:-.6px; margin:10px 0 0; }
+  .lp-lead{ color:#55607A; font-size:16.5px; line-height:1.6; max-width:680px; margin:14px 0 0; }
+  .lp-grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:40px; }
+  .lp-grid6{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:40px; }
+  .lp-card{ background:#fff; border:1px solid #EAEEF5; border-radius:16px; padding:26px; box-shadow:0 2px 10px rgba(16,28,64,.04); transition:.18s; }
+  .lp-card:hover{ transform:translateY(-3px); box-shadow:0 16px 34px rgba(16,28,64,.1); border-color:#DCE4F5; }
+  .lp-cico{ width:46px; height:46px; border-radius:12px; display:grid; place-items:center; margin-bottom:16px; }
+  .lp-cico svg{ width:23px; height:23px; }
+  .lp-card h3{ margin:0 0 7px; font-size:18px; color:var(--lp-navy); }
+  .lp-card p{ margin:0; color:#5A6479; font-size:14.5px; line-height:1.55; }
+  .lp-num{ font-size:13px; font-weight:800; color:var(--lp-gold); letter-spacing:1px; }
+
+  .lp-alt{ background:#F6F8FC; }
+
+  /* Referentiels */
+  .lp-refs{ text-align:center; padding:40px 0 4px; }
+  .lp-refs .t{ color:#8894B0; font-size:12.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; }
+  .lp-refrow{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px; }
+  .lp-ref{ background:#fff; border:1px solid #E6EBF4; color:#45506B; font-weight:700; font-size:13.5px; padding:9px 16px; border-radius:999px; }
+
+  /* Deux espaces */
+  .lp-spaces{ background:linear-gradient(135deg,var(--lp-navy),#13224F); color:#fff; border-radius:22px; padding:44px; display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:center; }
+  .lp-spaces h2{ font-size:28px; margin:0; letter-spacing:-.4px; color:#fff; }
+  .lp-spaces p{ color:#B9C4E3; margin:10px 0 0; font-size:15px; line-height:1.6; }
+  .lp-spacecards{ display:grid; gap:12px; }
+  .lp-sc{ background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:14px; }
+  .lp-sc b{ display:block; font-size:15px; } .lp-sc span{ color:#AEB9D6; font-size:13px; }
+  .lp-sc .go{ margin-left:auto; color:#7FA0FF; font-weight:800; }
+
+  /* Trust bar */
+  .lp-trust{ background:var(--lp-navy); color:#fff; }
+  .lp-trust .lp-wrap{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:18px; padding:26px 24px; }
+  .lp-tr{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:14px; color:#E7ECFA; }
+  .lp-tr svg{ width:20px; height:20px; color:var(--lp-blue2); }
+
+  /* Footer */
+  .lp-foot{ background:#070E22; color:#8A96B8; font-size:13px; }
+  .lp-foot .lp-wrap{ display:flex; justify-content:space-between; align-items:center; padding:26px 24px; flex-wrap:wrap; gap:12px; }
+  .lp-foot b{ color:#fff; }
+
+  @media(max-width:900px){
+    .lp-nav,.lp-link{ display:none; }
+    .lp-hero .lp-wrap{ grid-template-columns:1fr; padding:48px 24px 60px; }
+    .lp-prev{ transform:none; }
+    .lp-h1{ font-size:34px; } .lp-h2{ font-size:26px; }
+    .lp-grid3,.lp-grid6{ grid-template-columns:1fr; }
+    .lp-spaces{ grid-template-columns:1fr; padding:30px; }
+  }
+</style>
+
+<div class="lp">
+  <!-- Topbar -->
+  <header class="lp-top">
+    <div class="lp-wrap">
+      <a class="lp-brand" href="/"><img src="/static/img/axiome_logo.png" alt="AXIOME" style="height:36px;display:block"></a>
+      <nav class="lp-nav">
+        <a href="#expertises">Nos expertises</a>
+        <a href="#solution">La solution</a>
+        <a href="#apercu">Aperçu</a>
+        <a href="/login">Espaces</a>
+      </nav>
+      <div class="lp-actions">
+        <a class="lp-link" href="/login">Se connecter</a>
+        <a class="lp-btn lp-btn-primary" href="/login">Accéder à la plateforme <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="lp-hero">
+    <div class="lp-wrap">
+      <div>
+        <span class="lp-pill"><span class="lp-dot"></span> Plateforme intégrée · Audit · Comptabilité · Conformité</span>
+        <h1 class="lp-h1">L'audit augmenté,<br>maîtrisé et <span class="accent">documenté.</span></h1>
+        <p class="lp-sub">Audit légal, expertise comptable, fiscalité, consolidation et durabilité — une plateforme unique, multi‑référentiel et multi‑devises, pour piloter toutes vos missions avec rigueur, efficacité et sérénité.</p>
+        <div class="lp-cta">
+          <a class="lp-btn lp-btn-primary" href="/login">Découvrir AXIOME <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="lp-btn lp-btn-light" href="#solution">Comment ça marche</a>
+        </div>
+        <div class="lp-trusttext">PCG · NEP · ISA · IFRS · SYSCOHADA révisé · 181 devises ISO 4217</div>
+      </div>
+      <!-- Product preview -->
+      <div class="lp-prev">
+        <div class="lp-prev-bar"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="lp-prev-title">AXIOME · Tableau de bord</span></div>
+        <div class="lp-prev-body">
+          <div class="lp-prev-side">
+            <b>◆ AXIOME</b>
+            <a class="on">Tableau de bord</a><a>Missions</a><a>Clients</a><a>Documents</a><a>Risques</a><a>Rapports</a>
+          </div>
+          <div class="lp-prev-main">
+            <div class="lp-kpis">
+              <div class="lp-kpi"><div class="n b">24</div><div class="l">Missions en cours</div></div>
+              <div class="lp-kpi"><div class="n g">18</div><div class="l">Missions clôturées</div></div>
+              <div class="lp-kpi"><div class="n">6</div><div class="l">Échéances ≤ 30 j</div></div>
+              <div class="lp-kpi"><div class="n r">3</div><div class="l">Risques élevés</div></div>
+            </div>
+            <div class="lp-prev-chart">
+              <div class="lp-donut"><span>78%</span></div>
+              <div class="lp-leg">
+                <div><i style="background:#2F5BFF"></i>Planifiées &amp; en cours</div>
+                <div><i style="background:#17A673"></i>Revues &amp; clôturées</div>
+                <div><i style="background:#E7ECF6"></i>À démarrer</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Value pills -->
+  <section class="lp-values">
+    <div class="lp-wrap">
+      <div class="lp-val"><span class="lp-vico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.4-3 8-7 10-4-2-7-5.6-7-10V6l7-3Z" stroke="#2F5BFF" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="#2F5BFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Conformité réglementaire</div>
+      <div class="lp-val"><span class="lp-vico"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="#2F5BFF" stroke-width="1.8" stroke-linecap="round"/></svg></span>Traçabilité complète</div>
+      <div class="lp-val"><span class="lp-vico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18" stroke="#2F5BFF" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="#2F5BFF" stroke-width="1.8"/></svg></span>Analyses &amp; IA intégrées</div>
+      <div class="lp-val"><span class="lp-vico"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="#2F5BFF" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#2F5BFF" stroke-width="1.8"/></svg></span>Sécurité renforcée</div>
+      <div class="lp-val"><span class="lp-vico"><svg viewBox="0 0 24 24" fill="none"><path d="M16 11a4 4 0 1 0-8 0M3 20a7 7 0 0 1 18 0" stroke="#2F5BFF" stroke-width="1.8" stroke-linecap="round"/></svg></span>Accompagnement expert</div>
+    </div>
+  </section>
+
+  <!-- Expertises -->
+  <section class="lp-sec" id="expertises">
+    <div class="lp-wrap">
+      <div class="lp-eyebrow">Nos expertises</div>
+      <h2 class="lp-h2">Une plateforme, tous les métiers du chiffre.</h2>
+      <p class="lp-lead">AXIOME couvre l'intégralité du cycle d'une mission, de l'acceptation au suivi des recommandations — pour les cabinets d'audit, de commissariat aux comptes et d'expertise comptable, en France comme à l'international.</p>
+      <div class="lp-grid6">
+        <div class="lp-card"><div class="lp-cico" style="background:#EAF0FF;color:#2F5BFF"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.4-3 8-7 10-4-2-7-5.6-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.8"/></svg></div><h3>Audit &amp; CAC</h3><p>Dossier d'audit complet par cycle, seuils (NEP 320), programmes de travail, échantillonnage (NEP 530) et rapports.</p></div>
+        <div class="lp-card"><div class="lp-cico" style="background:#EAF7F0;color:#17A673"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><h3>Expertise comptable</h3><p>Import FEC et balance, contrôles d'équilibre, analyse financière (ratios, SIG, BFR) et feuilles de travail.</p></div>
+        <div class="lp-card"><div class="lp-cico" style="background:#FFF4E0;color:#C9A227"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 7h6M9 11h6M9 15h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><h3>Fiscalité</h3><p>Référentiels et règles fiscales paramétrables par pays (TVA, IS) — jamais codés en dur, cloisonnés par référentiel.</p></div>
+        <div class="lp-card"><div class="lp-cico" style="background:#EAF7F0;color:#17A673"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21c5-2 8-6 8-11V4c-6 0-11 2-11 8 0 3 1.5 5.4 3 7Z" stroke="currentColor" stroke-width="1.8"/></svg></div><h3>Durabilité (CSRD)</h3><p>Analyse de double matérialité sur les thèmes ESRS, couverture des points de données et rapport d'assurance.</p></div>
+        <div class="lp-card"><div class="lp-cico" style="background:#F1ECFF;color:#7C5CFC"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 3 8l9 5 9-5-9-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 13l9 5 9-5M3 18l9 5 9-5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div><h3>Consolidation</h3><p>Groupes, filiales et multi‑référentiel (PCG, IFRS, SYSCOHADA) avec gestion multi‑devises ISO 4217.</p></div>
+        <div class="lp-card"><div class="lp-cico" style="background:#EAF0FF;color:#2F5BFF"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.8"/></svg></div><h3>Conseil &amp; conformité</h3><p>Cartographie des risques, contrôle interne (COSO), recommandations et conformité LCB‑FT confidentielle.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution / étapes -->
+  <section class="lp-sec lp-alt" id="solution">
+    <div class="lp-wrap">
+      <div class="lp-eyebrow">La solution</div>
+      <h2 class="lp-h2">Un fil conducteur, de la donnée au livrable.</h2>
+      <p class="lp-lead">Chaque mission suit quatre temps : Données, Dossier, Conformité et Restitution — avec un cloisonnement strict par cabinet et par référentiel.</p>
+      <div class="lp-grid3">
+        <div class="lp-card"><div class="lp-num">01 · DONNÉES</div><h3 style="margin-top:8px">Importer &amp; fiabiliser</h3><p>FEC (DGFiP), balance et grand livre importés et contrôlés : équilibre, doublons, cohérence. La donnée devient exploitable immédiatement.</p></div>
+        <div class="lp-card"><div class="lp-num">02 · DOSSIER</div><h3 style="margin-top:8px">Instruire la mission</h3><p>Cycles d'audit, programmes de travail, feuilles maîtresses, échantillonnage statistique et confirmations externes — documentés et tracés.</p></div>
+        <div class="lp-card"><div class="lp-num">03 · CONFORMITÉ</div><h3 style="margin-top:8px">Sécuriser &amp; conclure</h3><p>Seuils de signification, cartographie des risques, indicateurs de fraude (loi de Benford) et LCB‑FT, puis rapports générés en Word/PDF.</p></div>
+      </div>
+      <div class="lp-refs">
+        <div class="t">Référentiels pris en charge</div>
+        <div class="lp-refrow">
+          <span class="lp-ref">PCG — France</span><span class="lp-ref">NEP / CNCC</span><span class="lp-ref">ISA — IAASB</span>
+          <span class="lp-ref">IFRS</span><span class="lp-ref">SYSCOHADA révisé</span><span class="lp-ref">CGI / BOFiP</span><span class="lp-ref">ISQM 1 &amp; 2</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Deux espaces -->
+  <section class="lp-sec" id="apercu">
+    <div class="lp-wrap">
+      <div class="lp-spaces">
+        <div>
+          <h2>Deux espaces, un même standard d'exigence.</h2>
+          <p>Un accès cloisonné et sécurisé, avec routage automatique selon votre rôle : authentification forte (MFA), permissions granulaires et journal d'activité.</p>
+        </div>
+        <div class="lp-spacecards">
+          <a class="lp-sc" href="/login"><div><b>Espace cabinet</b><span>Associés, auditeurs, collaborateurs</span></div><span class="go">→</span></a>
+          <a class="lp-sc" href="/login"><div><b>Console éditeur</b><span>Supervision des cabinets &amp; licences</span></div><span class="go">→</span></a>
+          <a class="lp-sc" href="/login"><div><b>Portail de l'entité auditée</b><span>Échange de pièces &amp; suivi</span></div><span class="go">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust bar -->
+  <section class="lp-trust">
+    <div class="lp-wrap">
+      <div class="lp-tr"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 7h14M5 7l-2 6a4 4 0 0 0 8 0L9 7M15 7l-2 6a4 4 0 0 0 8 0l-2-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Conformité réglementaire</div>
+      <div class="lp-tr"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.4-3 8-7 10-4-2-7-5.6-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.8"/></svg>Sécurité des données</div>
+      <div class="lp-tr"><svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="7" ry="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 6v12c0 1.7 3 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3 3 7 3s7-1.3 7-3" stroke="currentColor" stroke-width="1.8"/></svg>Traçabilité complète</div>
+      <div class="lp-tr"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4-9 2 6h4l-6 11 1-8H6l-1 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Performance &amp; productivité</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="lp-foot">
+    <div class="lp-wrap">
+      <div><b>◆ AXIOME</b> — Plateforme d'audit légal, de commissariat aux comptes et de conformité.</div>
+      <div>© 2026 AXIOME · <a href="/login" style="color:#9FB0DC">Se connecter</a></div>
+    </div>
+  </footer>
+</div>
+{% endblock %}

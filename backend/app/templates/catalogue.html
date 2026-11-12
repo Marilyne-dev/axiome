@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Catalogue des missions · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/dashboard">{{ t('nav.dashboard', lang) }}</a>
+    <a class="link" href="/vue/clients">Clients</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Commissariat aux comptes</div>
+      <h1>Catalogue des missions</h1>
+    </div>
+  </div>
+  <p class="muted">Toutes les missions du commissaire aux comptes prises en charge par AXIOME. Chaque type
+    porte son cadre normatif, sa nature d'expression, son livrable et ses diligences clés.</p>
+
+  {% for cat_code, cat_lib, items in types_cat %}
+  <section class="panel">
+    <h2>{{ cat_lib }} <span class="chip">{{ items|length }}</span></h2>
+    <table class="grid">
+      <thead><tr><th>Mission</th><th>Base normative / légale</th><th>Nature</th><th>Livrable</th></tr></thead>
+      <tbody>
+        {% for code, d in items %}
+        <tr>
+          <td><b>{{ d.libelle }}</b></td>
+          <td>{{ d.base }}</td>
+          <td>{{ d.nature }}</td>
+          <td>{{ d.livrable }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endfor %}
+  <p class="muted small">Les missions de certification (comptes annuels, consolidés, organismes) déroulent
+    le dossier d'audit complet ; les autres suivent leurs diligences spécifiques. Le raccordement des
+    automatisations métier propres à chaque mission spécialisée (parité de fusion, points de données ESRS…)
+    constitue un approfondissement ultérieur.</p>
+</main>
+{% endblock %}

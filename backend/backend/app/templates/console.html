@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Console éditeur · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span>
+    <span class="pill">Console éditeur</span></div>
+  <nav>
+    <a class="link" href="/console"><b>Cabinets</b></a>
+    <a class="link" href="/console/abonnements">Abonnements</a>
+    <a class="link" href="/console/offres">Offres</a>
+    <span class="pill pill-role">{{ user.nom_complet }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Supervision plateforme</div>
+      <h1>Tous les cabinets</h1>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="card-k">Cabinets</div><div class="card-v">{{ stats.cabinets }}</div><div class="muted small">{{ stats.cabinets_actifs }} actifs</div></div>
+    <div class="card"><div class="card-k">Comptes</div><div class="card-v">{{ stats.users }}</div></div>
+    <div class="card"><div class="card-k">Entités auditées</div><div class="card-v">{{ stats.clients }}</div></div>
+    <div class="card"><div class="card-k">Missions</div><div class="card-v">{{ stats.missions }}</div></div>
+  </div>
+
+  <section class="panel">
+    <h2>Cabinets clients <span class="chip">{{ lignes | length }}</span></h2>
+    <table class="grid">
+      <thead><tr><th>Cabinet</th><th>Pays</th><th>Référentiel</th><th class="num">Comptes</th><th class="num">Missions</th><th>Licence (quotas)</th><th>État</th><th></th></tr></thead>
+      <tbody>
+        {% for l in lignes %}
+        <tr>
+          <td><b>{{ l.cabinet.nom }}</b></td>
+          <td>{{ l.cabinet.pays }}</td>
+          <td><span class="tag">{{ l.cabinet.referentiel_defaut }}</span></td>
+          <td class="num">{{ l.users }}{% if l.quota_collaborateurs %} / {{ l.quota_collaborateurs }}{% endif %}</td>
+          <td class="num">{{ l.missions }}{% if l.quota_missions %} / {{ l.quota_missions }}{% endif %}</td>
+          <td>
+            <form method="post" action="/console/cabinet/{{ l.cabinet.id }}/quotas" style="display:flex;gap:.3rem;align-items:center">
+              <input type="number" name="quota_collaborateurs" value="{{ l.quota_collaborateurs }}" min="0" style="width:4rem" title="Collaborateurs (0 = illimité)">
+              <input type="number" name="quota_missions" value="{{ l.quota_missions }}" min="0" style="width:4rem" title="Missions (0 = illimité)">
+              <button class="btn-sm" type="submit">OK</button>
+            </form>
+          </td>
+          <td>{% if l.suspendu %}<span class="niv niv-eleve">Suspendu</span>{% else %}<span class="niv niv-faible">Actif</span>{% endif %}</td>
+          <td>
+            <a class="btn-sm" href="/console/cabinet/{{ l.cabinet.id }}/journal">Journal</a>
+            <form method="post" action="/console/cabinet/{{ l.cabinet.id }}/toggle" style="display:inline">
+              <button class="btn-sm {% if not l.suspendu %}danger{% endif %}" type="submit">{% if l.suspendu %}Réactiver{% else %}Suspendre{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="muted">Aucun cabinet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Quotas : 0 = illimité. <a class="link" href="/console/outbox">Boîte d'envoi e-mail →</a></p>
+  </section>
+
+  <section class="panel">
+    <h2>Créer un cabinet + son administrateur (CAC)</h2>
+    <p class="muted small">Le compte créé reçoit le rôle « Administrateur du cabinet ». Il gérera ensuite ses propres collaborateurs.</p>
+    <form method="post" action="/console/cabinet" class="stack">
+      <div class="grid2">
+        <label>Nom du cabinet <input type="text" name="nom" required></label>
+        <label>Pays <input type="text" name="pays" value="France"></label>
+      </div>
+      <div class="grid2">
+        <label>Référentiel par défaut
+          <select name="referentiel_defaut">
+            {% for r in referentiels %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Devise par défaut (ISO 4217) <input type="text" name="devise_defaut" value="EUR" maxlength="3"></label>
+      </div>
+      <hr>
+      <div class="grid2">
+        <label>Nom du CAC <input type="text" name="cac_nom" placeholder="Prénom Nom"></label>
+        <label>Email du CAC <input type="email" name="cac_email" placeholder="cac@cabinet.fr" required></label>
+      </div>
+      <label>Mot de passe initial (8+) <input type="password" name="cac_password" required minlength="8"></label>
+      <button class="btn-primary" type="submit">Créer le cabinet</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

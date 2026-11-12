@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}GED · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>Gestion documentaire (GED)</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span>
+      <span class="chip">{{ docs|length }} pièce(s)</span></div>
+  </div>
+
+  {% if err %}<div class="banner alert-v">{{ err }}</div>{% endif %}
+
+  <section class="panel">
+    <h2>Déposer une pièce</h2>
+    <form method="post" action="/missions/{{ mission.id }}/vue/documents/upload" enctype="multipart/form-data" class="row">
+      <input type="file" name="fichier" required>
+      <input type="text" name="cycle_code" placeholder="Cycle (optionnel, ex. TRESORERIE)">
+      <button class="btn-primary" type="submit">Téléverser</button>
+    </form>
+    <p class="muted small">Formats acceptés : PDF, Excel, Word, CSV, images, TXT, XML. Taille max par fichier : 25 Mo.</p>
+  </section>
+
+  <section class="panel">
+    <form method="get" action="/missions/{{ mission.id }}/vue/documents" class="row">
+      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher dans le texte des pièces…" style="min-width:280px">
+      <button class="btn-sm" type="submit">Rechercher</button>
+      {% if q %}<a class="link" href="/missions/{{ mission.id }}/vue/documents">Réinitialiser</a>{% endif %}
+      <span class="muted small">OCR/extraction : {{ 'moteur disponible' if ocr_dispo else 'texte & PDF uniquement (Tesseract absent)' }}</span>
+    </form>
+  </section>
+
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>Nom</th><th>Type</th><th>Cycle</th><th>Taille</th><th>Texte</th><th></th></tr></thead>
+      <tbody>
+        {% for d in docs %}
+        <tr>
+          <td>{{ d.nom }}</td>
+          <td><span class="tag">{{ d.type_doc or '—' }}</span></td>
+          <td>{{ d.cycle_code or '—' }}</td>
+          <td class="num">{{ (d.taille / 1024) | round(1) }} Ko</td>
+          <td>
+            {% if d.ocr_statut == 'ok' %}
+              <span class="niv niv-faible" title="{{ d.texte_extrait[:160] }}">extrait ({{ d.ocr_methode }})</span>
+            {% elif d.ocr_statut == 'non_traite' %}
+              <span class="muted">—</span>
+            {% else %}
+              <span class="niv niv-modere">{{ d.ocr_statut }}</span>
+            {% endif %}
+          </td>
+          <td class="row">
+            <form method="post" action="/missions/{{ mission.id }}/vue/documents/{{ d.id }}/ocr">
+              <button class="btn-sm" type="submit">Extraire le texte</button>
+            </form>
+            <a class="btn-sm" href="/missions/{{ mission.id }}/vue/documents/{{ d.id }}/download">Télécharger</a>
+            <form method="post" action="/missions/{{ mission.id }}/vue/documents/{{ d.id }}/delete"
+                  onsubmit="return confirm('Supprimer cette pièce ?')">
+              <button class="btn-sm danger" type="submit">Supprimer</button>
+            </form>
+          </td>
+        </tr>
+        {% if q and d.texte_extrait %}
+        <tr class="extrait-row"><td colspan="6" class="muted small">…{{ d.texte_extrait[:240] }}…</td></tr>
+        {% endif %}
+        {% else %}
+        <tr><td colspan="6" class="muted">{% if q %}Aucune pièce ne correspond à « {{ q }} ».{% else %}Aucune pièce déposée.{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

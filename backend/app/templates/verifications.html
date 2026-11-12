@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Vérifications spécifiques — {{ mission.intitule }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions/{{ mission.id }}/vue">← Mission</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Vérifications spécifiques · art. L.823-10 C. com.</div>
+      <h1>Concordance & vérifications spécifiques</h1>
+    </div>
+    <div class="chips"><span class="tag">{{ mission.intitule }}</span></div>
+  </div>
+  <p class="muted small">Le commissaire aux comptes vérifie la <b>concordance</b> des informations
+    financières du rapport de gestion avec les comptes annuels, et procède aux vérifications spécifiques
+    prévues par la loi. Les montants « issus des comptes » sont calculés depuis la balance importée
+    (indicatifs, à valider).</p>
+
+  <section class="cards">
+    <div class="card"><div class="card-k">Montants renseignés</div><div class="card-v">{{ etat.renseignes }}/{{ etat.nb_lignes }}</div></div>
+    <div class="card"><div class="card-k">Concordants</div><div class="card-v ok-v">{{ etat.concordants }}</div></div>
+    <div class="card"><div class="card-k">Écarts</div><div class="card-v {% if etat.ecarts %}alert-v{% endif %}">{{ etat.ecarts }}</div></div>
+    <div class="card"><div class="card-k">Points contrôlés</div><div class="card-v">{{ etat.points_faits }}/{{ etat.nb_points }}</div></div>
+  </section>
+  <div class="banner {% if etat.ecarts %}banner-warn{% elif etat.renseignes %}ok-v{% endif %}">{{ etat.conclusion }}</div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.4rem 0 1rem">
+    <a class="btn-primary" href="/missions/{{ mission.id }}/vue/verifications/note?format=pdf">Note de vérifications (PDF)</a>
+    <a class="btn" href="/missions/{{ mission.id }}/vue/verifications/note?format=docx">Version Word</a>
+  </div>
+
+  <section class="panel">
+    <h2>Contrôle de concordance du rapport de gestion</h2>
+    <table class="grid">
+      <thead><tr><th>Rubrique</th><th class="num">Montant issu des comptes</th><th class="num">Montant au rapport de gestion</th><th class="num">Écart</th><th>Statut</th><th>Observation</th><th></th></tr></thead>
+      <tbody>
+        {% for l in etat.lignes %}
+        <tr>
+          <td><b>{{ l.libelle }}</b></td>
+          <td class="num">{{ "{:,.0f}".format(l.montant_comptes).replace(",", " ") }}</td>
+          <form method="post" action="/missions/{{ mission.id }}/vue/verifications/ligne/{{ l.code }}">
+          <td class="num"><input type="text" name="montant_rapport" style="width:9rem;text-align:right"
+              value="{% if l.montant_rapport is not none %}{{ '%.0f'|format(l.montant_rapport) }}{% endif %}" placeholder="—"></td>
+          <td class="num">{% if l.ecart is not none %}{{ "{:,.0f}".format(l.ecart).replace(",", " ") }}{% else %}—{% endif %}</td>
+          <td>
+            {% if l.statut == 'concordant' %}<span class="niv niv-faible">Concordant</span>
+            {% elif l.statut == 'ecart' %}<span class="niv niv-eleve">Écart</span>
+            {% else %}<span class="niv niv-modere">Non renseigné</span>{% endif %}
+          </td>
+          <td><input type="text" name="observation" value="{{ l.observation }}" placeholder="Justification"></td>
+          <td><button class="btn-sm" type="submit">Enregistrer</button></td>
+          </form>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Tolérance appliquée : 1 unité ou 0,5 % du montant des comptes.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Points de vérification spécifique</h2>
+    <table class="grid">
+      <tbody>
+        {% for p in etat.points %}
+        <tr>
+          <td class="num" style="width:2.6rem">{% if p.fait %}<span class="niv niv-faible">✓</span>{% else %}<span class="niv niv-modere">○</span>{% endif %}</td>
+          <td>{{ p.libelle }}</td>
+          <td style="width:9rem">
+            <form method="post" action="/missions/{{ mission.id }}/vue/verifications/point/{{ p.code }}/toggle">
+              <button class="btn-sm" type="submit">{% if p.fait %}À revoir{% else %}Marquer fait{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

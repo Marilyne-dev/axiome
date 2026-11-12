@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ t('clients.title', lang) }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/dashboard">{{ t('nav.dashboard', lang) }}</a>
+    <a class="link" href="/missions">{{ t('nav.missions', lang) }}</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <span class="lang"><a href="/vue/langue/fr" class="{% if lang=='fr' %}on{% endif %}">FR</a>·<a href="/vue/langue/en" class="{% if lang=='en' %}on{% endif %}">EN</a></span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <h1>{{ t('clients.title', lang) }}</h1>
+  <div class="grid2">
+    <section class="panel">
+      <h2>{{ t('clients.portfolio', lang) }}</h2>
+      <table class="grid">
+        <thead><tr><th>{{ t('clients.name', lang) }}</th><th>{{ t('clients.legal_id', lang) }}</th>
+          <th>{{ t('clients.country', lang) }}</th><th>{{ t('clients.sector', lang) }}</th></tr></thead>
+        <tbody>
+          {% for c in clients %}
+          <tr><td>{{ c.raison_sociale }}</td><td>{{ c.identifiant_legal or '—' }}</td>
+              <td>{{ c.pays }}</td><td>{{ c.secteur or '—' }}</td></tr>
+          {% else %}
+          <tr><td colspan="4" class="muted">{{ t('common.none', lang) }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    <section class="panel">
+      <h2>{{ t('clients.new', lang) }}</h2>
+      <form method="post" action="/vue/clients">
+        <label>{{ t('clients.name', lang) }} <input type="text" name="raison_sociale" required></label>
+        <label>{{ t('clients.legal_id', lang) }} <input type="text" name="identifiant_legal"></label>
+        <label>{{ t('clients.country', lang) }} <input type="text" name="pays" value="France"></label>
+        <label>{{ t('clients.sector', lang) }} <input type="text" name="secteur"></label>
+        <button class="btn-primary" type="submit">{{ t('common.create', lang) }}</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Nouvelle mission</h2>
+    {% if clients %}
+    <p class="muted small">Sélectionnez le type de mission : il détermine le cadre normatif, le livrable et les diligences.</p>
+    <form method="post" action="/vue/missions/creer" class="stack">
+      <div class="grid2">
+        <label>Entité auditée
+          <select name="client_id" required>
+            {% for c in clients %}<option value="{{ c.id }}">{{ c.raison_sociale }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Intitulé <input type="text" name="intitule" placeholder="CAC — exercice 2025" required></label>
+      </div>
+      <div class="grid2">
+        <label>Type de mission
+          <select name="type_mission">
+            {% for cat_code, cat_lib, items in types_cat %}
+            <optgroup label="{{ cat_lib }}">
+              {% for code, d in items %}<option value="{{ code }}">{{ d.libelle }}</option>{% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Exercice <input type="text" name="exercice" placeholder="2025"></label>
+      </div>
+      <div class="grid2">
+        <label>Référentiel
+          <select name="referentiel">{% for r in referentiels %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select>
+        </label>
+        <label>Devise (ISO 4217) <input type="text" name="devise" value="EUR" maxlength="3"></label>
+      </div>
+      <button class="btn-primary" type="submit">Créer la mission</button>
+    </form>
+    {% else %}
+    <p class="muted">Créez d'abord une entité auditée pour ouvrir une mission.</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

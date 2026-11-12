@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Planification · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.planification', lang) }}</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span>
+      <span class="chip">Budget total : {{ '{:,.0f}'.format(total_budget).replace(',', ' ') }} {{ mission.devise }}</span></div>
+  </div>
+
+  <section class="panel">
+    <h2>Cadre général</h2>
+    <form method="post" action="/missions/{{ mission.id }}/vue/planification/save">
+      <div class="row">
+        <label class="fld">Début<input type="date" name="date_debut" value="{{ plan.date_debut or '' }}"></label>
+        <label class="fld">Fin<input type="date" name="date_fin" value="{{ plan.date_fin or '' }}"></label>
+        <label class="fld">Honoraires ({{ mission.devise }})<input type="text" name="honoraires" value="{{ '%.2f'|format(plan.honoraires) }}"></label>
+      </div>
+      <label class="fld">Approche d'audit<input type="text" name="approche" value="{{ plan.approche }}" placeholder="ex. approche mixte substantive / contrôles"></label>
+      <button class="btn-primary" type="submit">Enregistrer</button>
+    </form>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Jalons</h2>
+      <table class="mini">
+        {% for j in plan.jalons %}
+        <tr><td>{{ j.libelle }}</td><td class="muted">{{ j.echeance or '—' }}</td><td>{{ j.statut }}</td></tr>
+        {% else %}<tr><td class="muted">Aucun jalon.</td></tr>{% endfor %}
+      </table>
+      <form method="post" action="/missions/{{ mission.id }}/vue/planification/jalon" class="row">
+        <input type="text" name="libelle" placeholder="Jalon" required>
+        <input type="date" name="echeance">
+        <button class="btn-sm" type="submit">+ Ajouter</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Budget</h2>
+      <table class="mini">
+        {% for b in plan.budget %}
+        <tr><td>{{ b.poste }}</td><td class="num">{{ '{:,.0f}'.format(b.montant).replace(',', ' ') }} {{ b.devise }}</td></tr>
+        {% else %}<tr><td class="muted">Aucune ligne.</td></tr>{% endfor %}
+      </table>
+      <form method="post" action="/missions/{{ mission.id }}/vue/planification/budget" class="row">
+        <input type="text" name="poste" placeholder="Poste" required>
+        <input type="text" name="montant" placeholder="Montant">
+        <button class="btn-sm" type="submit">+ Ajouter</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Équipe affectée</h2>
+    <table class="mini">
+      {% for a in plan.equipe %}
+      <tr><td>{{ a.role_mission }}</td><td class="muted">utilisateur #{{ a.user_id }}</td><td class="num">{{ '%.0f'|format(a.heures_estimees) }} h</td></tr>
+      {% else %}<tr><td class="muted">Aucune affectation.</td></tr>{% endfor %}
+    </table>
+    <form method="post" action="/missions/{{ mission.id }}/vue/planification/equipe" class="row">
+      <select name="user_id">
+        {% for u in equipe_dispo %}<option value="{{ u.id }}">{{ u.nom_complet or u.email }}</option>{% endfor %}
+      </select>
+      <input type="text" name="role_mission" placeholder="Rôle" value="collaborateur">
+      <input type="text" name="heures_estimees" placeholder="Heures">
+      <button class="btn-sm" type="submit">+ Affecter</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

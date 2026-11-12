@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Veille réglementaire · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/dashboard">{{ t('nav.dashboard', lang) }}</a>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>Veille réglementaire</h1>
+    <div class="chips">
+      <span class="chip {% if non_lus %}alert-v{% endif %}">{{ non_lus }} non lu(s)</span>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="row">
+      <span class="muted">Référentiel :</span>
+      {% for r in ['TOUS','PCG_FR','IFRS','SYSCOHADA_OHADA','TRANSVERSE'] %}
+      <a class="btn-sm {% if ref == r %}btn-primary{% endif %}" href="/vue/veille?ref={{ r }}">{{ r }}</a>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if not items %}
+  <section class="panel">
+    <p class="muted">Aucune entrée. Amorcez la veille avec un jeu de référence (illustratif).</p>
+    <form method="post" action="/vue/veille/init"><button class="btn-primary" type="submit">Amorcer la veille</button></form>
+  </section>
+  {% else %}
+  <section class="panel">
+    {% for v in items %}
+    <div class="doc-preview {% if not v.lu %}nonlu{% endif %}">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <strong>{{ v.titre }}</strong>
+          <span class="tag">{{ v.reference }}</span>
+          <span class="niv {% if v.impact == 'fort' %}niv-eleve{% elif v.impact == 'faible' %}niv-faible{% else %}niv-modere{% endif %}">{{ v.impact }}</span>
+        </div>
+        <form method="post" action="/vue/veille/{{ v.id }}/lu">
+          <input type="hidden" name="lu" value="{{ '0' if v.lu else '1' }}">
+          <button class="btn-sm" type="submit">{{ 'Marquer non lu' if v.lu else 'Marquer lu' }}</button>
+        </form>
+      </div>
+      <div class="muted small">{{ v.source }} · {{ v.referentiel }}{% if v.date_publication %} · {{ v.date_publication }}{% endif %}</div>
+      <p>{{ v.resume }}</p>
+      {% if v.url %}<a class="link" href="{{ v.url }}" target="_blank" rel="noopener">Source →</a>{% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    <h2>Ajouter une entrée</h2>
+    <form method="post" action="/vue/veille/add">
+      <div class="row">
+        <input type="text" name="titre" placeholder="Titre" required>
+        <input type="text" name="reference" placeholder="Réf. (ex. NEP 240)">
+        <input type="text" name="source" placeholder="Source (CNCC…)">
+      </div>
+      <div class="row">
+        <select name="referentiel">
+          {% for r in ['TRANSVERSE','PCG_FR','IFRS','SYSCOHADA_OHADA'] %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+        </select>
+        <select name="impact">
+          {% for i in ['faible','moyen','fort'] %}<option value="{{ i }}" {% if i == 'moyen' %}selected{% endif %}>{{ i }}</option>{% endfor %}
+        </select>
+        <input type="text" name="url" placeholder="URL source">
+      </div>
+      <label class="fld">Résumé<textarea name="resume" rows="2"></textarea></label>
+      <button class="btn-primary" type="submit">Ajouter</button>
+    </form>
+  </section>
+
+  <p class="muted small">Note : cette veille n'est pas alimentée automatiquement par des flux officiels ;
+    les entrées de référence sont illustratives et la base est alimentable manuellement.</p>
+</main>
+{% endblock %}

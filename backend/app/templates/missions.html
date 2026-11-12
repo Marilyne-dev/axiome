@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t('missions.title', lang) }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/dashboard">{{ t('nav.dashboard', lang) }}</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <span class="lang"><a href="/vue/langue/fr" class="{% if lang=='fr' %}on{% endif %}">FR</a>·<a href="/vue/langue/en" class="{% if lang=='en' %}on{% endif %}">EN</a></span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <h1>{{ t('missions.title', lang) }}</h1>
+  <table class="grid">
+    <thead><tr>
+      <th>{{ t('missions.intitule', lang) }}</th><th>{{ t('missions.client', lang) }}</th>
+      <th>{{ t('missions.ref', lang) }}</th><th>{{ t('missions.currency', lang) }}</th>
+      <th>{{ t('missions.status', lang) }}</th><th></th></tr></thead>
+    <tbody>
+      {% for m in missions %}
+      <tr>
+        <td>{{ m.intitule }}</td>
+        <td>{{ m.client.raison_sociale if m.client else '—' }}</td>
+        <td><span class="tag">{{ m.referentiel }}</span></td>
+        <td>{{ m.devise }}</td>
+        <td><span class="badge">{{ m.statut }}</span></td>
+        <td><a class="btn-sm" href="/missions/{{ m.id }}/vue">{{ t('missions.open_file', lang) }} →</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted">{{ t('common.none', lang) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Analyse TVA · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.tva', lang) }}</h1>
+    <div class="chips">
+      <span class="chip">{{ mission.intitule }}</span>
+      <span class="chip">{{ mission.referentiel }}{% if mission.pays %} · {{ mission.pays }}{% endif %}</span>
+      {% if cadrage %}
+      <span class="chip {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">Écart global : {{ '{:,.2f}'.format(cadrage.ecart_global).replace(',', ' ') }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not rows %}
+  <section class="panel">
+    <p class="muted">Aucune ligne. Initialisez l'analyse : les taux applicables sont déduits du référentiel/pays de la mission, et la TVA comptabilisée est préremplie depuis les comptes #4457.</p>
+    <form method="post" action="/missions/{{ mission.id }}/vue/analyse-tva/init">
+      <button class="btn-primary" type="submit">Initialiser</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="panel">
+    <form method="post" action="/missions/{{ mission.id }}/vue/analyse-tva/save">
+      <table class="grid saisie">
+        <thead><tr>
+          <th>Rubrique</th><th>Taux</th><th>Base HT (ventes)</th>
+          <th>TVA théorique</th><th>TVA comptabilisée</th><th>Écart</th><th>Commentaire</th>
+        </tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr data-row="{{ r.id }}">
+            <td>{{ r.rubrique }}</td>
+            <td><input class="in-num taux" type="text" name="taux_{{ r.id }}" value="{{ '%.1f'|format(r.taux * 100) }}" style="width:64px"> %</td>
+            <td><input class="in-num base" type="text" name="base_{{ r.id }}" value="{{ '%.2f'|format(r.base_ht) }}"></td>
+            <td class="num theo">{{ '{:,.2f}'.format(r.tva_theorique).replace(',', ' ') }}</td>
+            <td><input class="in-num tvac" type="text" name="tvac_{{ r.id }}" value="{{ '%.2f'|format(r.tva_comptabilisee) }}"></td>
+            <td class="num ecart {% if r.ecart|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.2f}'.format(r.ecart).replace(',', ' ') }}</td>
+            <td><input class="in-text" type="text" name="comm_{{ r.id }}" value="{{ r.commentaire }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="3">TOTAL</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.total_theorique).replace(',', ' ') }}</td>
+            <td class="num">{{ '{:,.0f}'.format(cadrage.total_comptabilisee).replace(',', ' ') }}</td>
+            <td class="num {% if cadrage.ecart_global|abs >= 0.01 %}alert-v{% endif %}">{{ '{:,.0f}'.format(cadrage.ecart_global).replace(',', ' ') }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button class="btn-primary" type="submit" style="margin-top:.8rem">Enregistrer l'analyse TVA</button>
+    </form>
+    <p class="muted small">TVA théorique = base HT × taux. L'écart (théorique − comptabilisée) matérialise un risque de TVA collectée non déclarée.</p>
+  </section>
+  {% endif %}
+</main>
+<script>
+document.querySelectorAll('tr[data-row]').forEach(function (tr) {
+  var theo = tr.querySelector('.theo');
+  var ec = tr.querySelector('.ecart');
+  var base = tr.querySelector('.base');
+  var taux = tr.querySelector('.taux');
+  var tvac = tr.querySelector('.tvac');
+  function num(el) { return parseFloat((el.value || '0').replace(',', '.')) || 0; }
+  function maj() {
+    var t = num(base) * (num(taux) / 100);
+    theo.textContent = t.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    var e = t - num(tvac);
+    ec.textContent = e.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    ec.classList.toggle('alert-v', Math.abs(e) >= 0.01);
+  }
+  [base, taux, tvac].forEach(function (i) { i.addEventListener('input', maj); });
+});
+</script>
+{% endblock %}

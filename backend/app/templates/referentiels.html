@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Référentiels · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/dashboard">Tableau de bord</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <h1>Référentiels normatifs</h1>
+  <div class="cycles-edit">
+    {% for code, r in referentiels.items() %}
+    <div class="cycle-row">
+      <div class="cycle-row-head"><span class="cycle-lib">{{ r.libelle }}</span><span class="tag">{{ code }}</span></div>
+      <p class="small"><strong>Zone :</strong> {{ r.zone }}</p>
+      <p class="small"><strong>Comptable :</strong> {{ r.normes_comptables }}</p>
+      <p class="small"><strong>Audit :</strong> {{ r.normes_audit|join(', ') }}</p>
+      {% if r.classes %}
+      <p class="small"><strong>Plan de comptes :</strong></p>
+      <ul class="small" style="margin:.2rem 0 .4rem 1rem">
+        {% for num, lib in r.classes %}<li>Classe {{ num }} — {{ lib }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+      <p class="muted small">{{ r.note }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <section class="panel" style="margin-top:1.2rem">
+    <h2>Correspondance NEP (France) ↔ ISA (international)</h2>
+    <table class="grid">
+      <thead><tr><th>Thème</th><th>NEP</th><th>ISA</th></tr></thead>
+      <tbody>
+        {% for theme, nep, isa in correspondance %}
+        <tr><td>{{ theme }}</td><td><span class="tag">{{ nep }}</span></td><td><span class="tag">{{ isa }}</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

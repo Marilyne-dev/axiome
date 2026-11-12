@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ t('login.title', lang) }} · {{ t('app.title', lang) }}{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-mark">◆</span>
+      <span class="brand-name">AXIOME</span>
+    </div>
+    <p class="tagline">{{ t('app.tagline', lang) }}</p>
+    <h1>{{ t('login.title', lang) }}</h1>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="/login" autocomplete="off">
+      <label>{{ t('login.email', lang) }}
+        <input type="email" name="email" required value="admin@axiome.local" />
+      </label>
+      <label>{{ t('login.password', lang) }}
+        <input type="password" name="password" required />
+      </label>
+      {% if mfa %}
+      <label>{{ t('login.mfa', lang) }}
+        <input type="text" name="mfa_code" inputmode="numeric" pattern="[0-9]*" maxlength="6" />
+      </label>
+      {% endif %}
+      <button type="submit" class="btn-primary">{{ t('login.submit', lang) }}</button>
+    </form>
+    <p class="muted small" style="margin-top:.8rem"><a class="link" href="/mot-de-passe-oublie">Mot de passe oublié ?</a></p>
+  </div>
+  <p class="foot">© 2026 AXIOME — Plateforme d'audit intelligent</p>
+</div>
+{% endblock %}

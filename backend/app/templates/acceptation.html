@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Acceptation · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{{ t('page.acceptation', lang) }}</h1>
+    <div class="chips">
+      <span class="chip">{{ mission.intitule }}</span>
+      <span class="chip {% if acc.decision == 'acceptee' %}ok-v{% elif acc.decision == 'refusee' %}alert-v{% endif %}">Décision : {{ acc.decision }}</span>
+    </div>
+  </div>
+
+  {% if err == 'conflit' %}<div class="banner alert-v">Acceptation impossible : un conflit d'intérêt doit être levé au préalable.</div>{% endif %}
+  {% if err == 'lettre' %}<div class="banner alert-v">La lettre de mission n'est disponible qu'après acceptation.</div>{% endif %}
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Diligences préalables</h2>
+      <form method="post" action="/missions/{{ mission.id }}/vue/acceptation/save">
+        <label class="chk"><input type="checkbox" name="independance_ok" {% if acc.independance_ok %}checked{% endif %}> Indépendance vérifiée</label>
+        <label class="chk"><input type="checkbox" name="conflit_interet" {% if acc.conflit_interet %}checked{% endif %}> Conflit d'intérêt identifié</label>
+        <label class="chk"><input type="checkbox" name="kyc_ok" {% if acc.kyc_ok %}checked{% endif %}> KYC / connaissance client réalisé</label>
+        <label class="chk"><input type="checkbox" name="continuite_exploitation_ok" {% if acc.continuite_exploitation_ok %}checked{% endif %}> Continuité d'exploitation appréciée</label>
+        <label class="fld">Niveau de risque global
+          <select name="niveau_risque_global">
+            {% for n in ['faible','standard','eleve'] %}
+            <option value="{{ n }}" {% if acc.niveau_risque_global == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button class="btn-primary" type="submit">Enregistrer</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Décision motivée</h2>
+      <form method="post" action="/missions/{{ mission.id }}/vue/acceptation/decision">
+        <label class="fld">Motivation
+          <textarea name="motivation" rows="3">{{ acc.motivation }}</textarea>
+        </label>
+        <div class="row">
+          <button class="btn-primary" type="submit" name="decision" value="acceptee">Accepter</button>
+          <button class="btn-sm danger" type="submit" name="decision" value="refusee">Refuser</button>
+        </div>
+      </form>
+      <hr>
+      <form method="post" action="/missions/{{ mission.id }}/vue/acceptation/lettre">
+        <button class="btn-sm" type="submit">Générer la lettre de mission (NEP 210)</button>
+      </form>
+      {% if lettre %}
+      <div class="doc-preview"><strong>{{ lettre.reference }}</strong> · {{ lettre.statut }}
+        <pre>{{ lettre.corps }}</pre>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</main>
+{% endblock %}

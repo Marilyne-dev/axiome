@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Cycles · {{ mission.intitule }}{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>Cycles d'audit</h1>
+    <div class="chips"><span class="chip">{{ mission.intitule }}</span></div></div>
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>Code</th><th>Libellé</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for c in cycles %}
+        <tr><td><span class="tag">{{ c.code }}</span></td><td>{{ c.libelle }}</td>
+            <td><span class="badge">{{ c.statut }}</span></td>
+            <td><a class="btn-sm" href="/missions/{{ mission.id }}/vue/cycles/{{ c.id }}">Ouvrir →</a></td></tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Aucun cycle. Ils sont créés à la planification de la mission.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

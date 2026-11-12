@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Boîte d'envoi · Console AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span><span class="pill">Éditeur</span></div>
+  <nav>
+    <a class="link" href="/console">← Console</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head"><div><div class="eyebrow">Console éditeur</div><h1>Boîte d'envoi e-mail</h1></div></div>
+  <p class="muted small">Sans serveur SMTP configuré, les e-mails (invitations, réinitialisations) sont
+    archivés ici. Copiez le lien pour le transmettre au destinataire. Avec SMTP, l'envoi est automatique
+    et cette page sert de journal.</p>
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Lien</th></tr></thead>
+      <tbody>
+        {% for m in messages %}
+        <tr>
+          <td class="muted small">{{ m.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ m.destinataire }}</td>
+          <td>{{ m.sujet }}</td>
+          <td>{% if m.lien %}<a class="link" href="{{ m.lien }}" style="word-break:break-all">{{ m.lien }}</a>{% else %}—{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">Aucun e-mail.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

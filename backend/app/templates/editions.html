@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Journal des éditions · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/missions/{{ mission.id }}/vue">{{ t('nav.back_file', lang) }}</a>
+       <a class="link" href="/dashboard">{{ t('nav.dashboard', lang) }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>Journal des éditions</h1>
+    <div class="chips">
+      <span class="chip">{{ editions | length }} édition(s)</span>
+      {% if editions %}<a class="btn-sm" href="/missions/{{ mission.id }}/vue/editions/export.csv">Exporter CSV ↓</a>{% endif %}
+    </div>
+  </div>
+  <p class="muted small">{{ mission.intitule }} — traçabilité des livrables générés (ISQM).</p>
+
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>#</th><th>Date</th><th>Livrable</th><th>Format</th><th>Généré par</th></tr></thead>
+      <tbody>
+        {% for e in editions %}
+        <tr>
+          <td>{{ editions | length - loop.index0 }}</td>
+          <td>{{ e.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ e.type_edition }}</td>
+          <td><span class="tag">{{ e.format or '—' }}</span></td>
+          <td>{{ e.par }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="muted">Aucune édition enregistrée pour cette mission.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Le journal est immuable : l'auteur est figé au moment de l'édition.</p>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,9 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+BQ	Banque	1	20251231	51200000	BANQUE			P1	20251231	Solde banque	100000,00	0,00					
+BQ	Banque	2	20251231	53000000	Caisse			P2	20251231	Espèces	5000,00	0,00					
+EMP	Emprunts	3	20251231	16400000	Emprunts établissements			P3	20251231	Emprunt	0,00	200000,00					
+CP	Capitaux	4	20251231	10100000	Capital			P4	20251231	Capital	0,00	300000,00					
+CP	Capitaux	5	20251231	12000000	Résultat			P5	20251231	Report	0,00	50000,00					
+VE	Ventes	6	20251231	70100000	Ventes marchandises			P6	20251231	CA	0,00	800000,00					
+AC	Achats	7	20251231	60700000	Achats marchandises			P7	20251231	Achats	500000,00	0,00					
+OD	Divers	8	20251231	64100000	Salaires			P8	20251231	Salaires	245000,00	0,00					

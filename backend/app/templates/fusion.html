@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Parité de fusion — {{ mission.intitule }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions/{{ mission.id }}/vue">← Mission</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Commissariat à la fusion · art. L.236-10 C. com.</div>
+      <h1>Contrôle de la parité d'échange</h1>
+    </div>
+    <div class="chips"><span class="tag">{{ mission.intitule }}</span></div>
+  </div>
+  <p class="muted small">Le commissaire à la fusion apprécie le caractère équitable du rapport d'échange
+    et vérifie que l'actif net apporté n'est pas surévalué. La valeur retenue par société est, par défaut,
+    la moyenne des méthodes saisies (à pondérer selon le jugement du commissaire).</p>
+
+  <div class="banner {% if etat.alertes %}banner-warn{% elif etat.parite_theorique %}ok-v{% endif %}">{{ etat.conclusion }}</div>
+  {% if etat.alertes %}<ul class="muted small">{% for a in etat.alertes %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.2rem 0 1rem">
+    <a class="btn-primary" href="/missions/{{ mission.id }}/vue/fusion/rapport?format=pdf">Rapport du commissaire à la fusion (PDF)</a>
+    <a class="btn" href="/missions/{{ mission.id }}/vue/fusion/rapport?format=docx">Version Word</a>
+  </div>
+
+  <section class="panel">
+    <h2>Paramètres de l'opération</h2>
+    <form method="post" action="/missions/{{ mission.id }}/vue/fusion/dossier" class="grid-form">
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:1rem">
+        <label>Société absorbante<input type="text" name="nom_absorbante" value="{{ etat.dossier.nom_absorbante }}"></label>
+        <label>Société absorbée<input type="text" name="nom_absorbee" value="{{ etat.dossier.nom_absorbee }}"></label>
+        <label>Nombre d'actions (absorbante)<input type="text" name="actions_absorbante" value="{{ etat.dossier.actions_absorbante }}"></label>
+        <label>Nombre d'actions (absorbée)<input type="text" name="actions_absorbee" value="{{ etat.dossier.actions_absorbee }}"></label>
+        <label>Valeur nominale action absorbante<input type="text" name="valeur_nominale" value="{{ '%g'|format(etat.dossier.valeur_nominale) }}"></label>
+        <label>Parité retenue (actions absorbante / absorbée)
+          <span style="display:flex;gap:.4rem;align-items:center">
+            <input type="text" name="parite_num" value="{{ etat.dossier.parite_num }}" style="width:5rem"> pour
+            <input type="text" name="parite_den" value="{{ etat.dossier.parite_den }}" style="width:5rem">
+          </span>
+        </label>
+      </div>
+      <button class="btn-primary" type="submit">Enregistrer les paramètres</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Évaluations par méthode</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.2rem">
+      {% for soc, evs, val in [("A", etat.eval_a, etat.valeur_a), ("B", etat.eval_b, etat.valeur_b)] %}
+      <div>
+        <h3>{{ 'Absorbante' if soc == 'A' else 'Absorbée' }} — valeur retenue : {{ "{:,.0f}".format(val).replace(",", " ") }}</h3>
+        <table class="grid">
+          <tbody>
+            {% for e in evs %}
+            <tr>
+              <td>{{ e.methode }}</td>
+              <td class="num">{{ "{:,.0f}".format(e.valeur).replace(",", " ") }}</td>
+              <td style="width:3rem"><form method="post" action="/missions/{{ mission.id }}/vue/fusion/evaluation/{{ e.id }}/supprimer"><button class="btn-sm" type="submit">✕</button></form></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <form method="post" action="/missions/{{ mission.id }}/vue/fusion/evaluation" style="display:flex;gap:.4rem;align-items:center;margin-top:.4rem">
+          <input type="hidden" name="societe" value="{{ soc }}">
+          <select name="methode">{% for m in etat.methodes %}<option>{{ m }}</option>{% endfor %}</select>
+          <input type="text" name="valeur" placeholder="Valeur" style="width:8rem">
+          <button class="btn-sm" type="submit">Ajouter</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Résultats du contrôle</h2>
+    <table class="grid">
+      <tbody>
+        <tr><td>Valeur unitaire — absorbante</td><td class="num">{{ "%.2f"|format(etat.vu_a) }}</td></tr>
+        <tr><td>Valeur unitaire — absorbée</td><td class="num">{{ "%.2f"|format(etat.vu_b) }}</td></tr>
+        <tr><td><b>Parité théorique</b> (actions absorbante pour 1 action absorbée)</td><td class="num"><b>{{ "%.4f"|format(etat.parite_theorique) }}</b></td></tr>
+        <tr><td>Parité retenue au traité ({{ etat.parite_num }} pour {{ etat.parite_den }})</td><td class="num">{{ "%.4f"|format(etat.parite_retenue) }}</td></tr>
+        <tr><td>Écart parité retenue / théorique</td><td class="num">{% if etat.ecart is not none %}<span class="niv {% if etat.ecart|abs > etat.seuil_ecart %}niv-eleve{% else %}niv-faible{% endif %}">{{ "%.1f"|format(etat.ecart * 100) }} %</span>{% else %}—{% endif %}</td></tr>
+        <tr><td>Actions absorbante à créer</td><td class="num">{{ "{:,.0f}".format(etat.actions_creees).replace(",", " ") }}</td></tr>
+        <tr><td>Augmentation de capital</td><td class="num">{{ "{:,.0f}".format(etat.augmentation_capital).replace(",", " ") }}</td></tr>
+        <tr><td>Actif net apporté</td><td class="num">{{ "{:,.0f}".format(etat.actif_net_apporte).replace(",", " ") }}</td></tr>
+        <tr><td><b>Prime de fusion</b></td><td class="num"><b>{{ "{:,.0f}".format(etat.prime_fusion).replace(",", " ") }}</b></td></tr>
+        <tr><td>Contrôle : actif net apporté ≥ augmentation de capital</td><td class="num">{% if etat.controle_apport %}<span class="niv niv-faible">Vérifié</span>{% else %}<span class="niv niv-eleve">Anomalie</span>{% endif %}</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

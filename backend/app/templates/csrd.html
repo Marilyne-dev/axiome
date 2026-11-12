@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}CSRD — {{ mission.intitule }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions/{{ mission.id }}/vue">← Mission</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <div>
+      <div class="eyebrow">Durabilité · CSRD / ESRS</div>
+      <h1>Assurance des informations de durabilité</h1>
+    </div>
+    <div class="chips">
+      <span class="chip">Assurance limitée</span>
+      <span class="tag">{{ mission.intitule }}</span>
+    </div>
+  </div>
+  <p class="muted small">ESRS 1 et ESRS 2 (informations générales) s'appliquent en toute hypothèse.
+    L'analyse ci-dessous détermine, par <b>double matérialité</b>, les thèmes topiques retenus, puis suit
+    la couverture de leurs points de données.</p>
+
+  <section class="cards">
+    <div class="card"><div class="card-k">Thèmes retenus</div><div class="card-v">{{ etat.nb_retenus }}/10</div></div>
+    <div class="card"><div class="card-k">Points de données</div><div class="card-v">{{ etat.couverts }}/{{ etat.total_points }}</div></div>
+    <div class="card"><div class="card-k">Couverture</div><div class="card-v {% if etat.couverture_pct < 50 %}alert-v{% endif %}">{{ etat.couverture_pct }}%</div></div>
+  </section>
+  <div class="banner {% if etat.nb_retenus and etat.couverture_pct >= 50 %}ok-v{% else %}banner-warn{% endif %}">
+    Conclusion (assurance limitée) : {{ etat.conclusion }}
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.4rem 0 1rem">
+    <a class="btn-primary" href="/missions/{{ mission.id }}/vue/csrd/rapport?format=pdf">Rapport d'assurance (PDF)</a>
+    <a class="btn" href="/missions/{{ mission.id }}/vue/csrd/rapport?format=docx">Version Word</a>
+  </div>
+
+  <section class="panel">
+    <h2>Analyse de double matérialité</h2>
+    <p class="muted small">Barème 0–3. Un thème est <b>retenu (matériel)</b> dès que la matérialité d'impact
+      OU financière atteint « Moyenne ».</p>
+    <table class="grid">
+      <thead><tr><th>Thème ESRS</th><th>Pilier</th><th>Matérialité d'impact</th><th>Matérialité financière</th><th>Justification</th><th>Résultat</th><th></th></tr></thead>
+      <tbody>
+        {% for t in etat.themes %}
+        <tr>
+          <td><b>{{ t.code }}</b> · {{ t.libelle }}</td>
+          <td>{{ t.pilier_lib }}</td>
+          <form method="post" action="/missions/{{ mission.id }}/vue/csrd/materialite/{{ t.code }}">
+          <td>
+            <select name="impact">
+              {% for v, lib in etat.echelle.items() %}<option value="{{ v }}" {% if v == t.impact %}selected{% endif %}>{{ v }} — {{ lib }}</option>{% endfor %}
+            </select>
+          </td>
+          <td>
+            <select name="financier">
+              {% for v, lib in etat.echelle.items() %}<option value="{{ v }}" {% if v == t.financier %}selected{% endif %}>{{ v }} — {{ lib }}</option>{% endfor %}
+            </select>
+          </td>
+          <td><input type="text" name="justification" value="{{ t.justification }}" placeholder="Motivation"></td>
+          <td>{% if t.retenu %}<span class="niv niv-faible">Retenu</span>{% else %}<span class="niv niv-modere">Non retenu</span>{% endif %}</td>
+          <td><button class="btn-sm" type="submit">Enregistrer</button></td>
+          </form>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Couverture des points de données ESRS <span class="chip">{{ etat.couverts }}/{{ etat.total_points }}</span></h2>
+    {% if etat.retenus %}
+    {% for t in etat.retenus %}
+    <h3>{{ t.code }} · {{ t.libelle }}</h3>
+    <table class="grid">
+      <tbody>
+        {% for p in etat.points_par_theme.get(t.code, []) %}
+        <tr>
+          <td class="num" style="width:2.6rem">{% if p.couvert %}<span class="niv niv-faible">✓</span>{% else %}<span class="niv niv-modere">○</span>{% endif %}</td>
+          <td style="width:5rem"><b>{{ p.code }}</b></td>
+          <td>{{ p.libelle }}</td>
+          <td style="width:10rem">
+            <form method="post" action="/missions/{{ mission.id }}/vue/csrd/point/{{ p.id }}/toggle">
+              <button class="btn-sm" type="submit">{% if p.couvert %}À revoir{% else %}Marquer couvert{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endfor %}
+    {% else %}
+    <p class="muted">Aucun thème retenu pour l'instant : renseignez la double matérialité ci-dessus.</p>
+    {% endif %}
+  </section>
+
+  <p class="muted small">Sous-ensemble représentatif des points de données ESRS à visée de travail. La liste
+    exhaustive des points ESRS et les automatisations avancées (taxonomie, agrégations) constituent un
+    approfondissement ultérieur.</p>
+</main>
+{% endblock %}

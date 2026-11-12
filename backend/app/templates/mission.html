@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}{{ mission.intitule }} · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav>
+    <a class="link" href="/missions">← Missions</a>
+    <span class="pill">{{ user.nom_complet or user.email }}</span>
+    <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a>
+  </nav>
+</header>
+<main class="container">
+  <div class="mission-head">
+    <h1>{{ mission.intitule }}</h1>
+    <div class="chips"><a class="chip" href="/missions/{{ mission.id }}/vue/cycles" style="text-decoration:none">{{ t('ws.cycles', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/rapprochement" style="text-decoration:none">{{ t('ws.rapprochement', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/fraude" style="text-decoration:none">{{ t('ws.fraude', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/balance-agee/clients" style="text-decoration:none">{{ t('ws.balance_agee_clients', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/balance-agee/fournisseurs" style="text-decoration:none">{{ t('ws.balance_agee_frs', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/cadrage-dsn" style="text-decoration:none">{{ t('ws.dsn', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/analyse-tva" style="text-decoration:none">{{ t('ws.tva', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/acceptation" style="text-decoration:none">{{ t('ws.acceptation', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/planification" style="text-decoration:none">{{ t('ws.planification', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/echantillonnage" style="text-decoration:none">{{ t('ws.echantillonnage', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/confirmations" style="text-decoration:none">{{ t('ws.confirmations', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/documents" style="text-decoration:none">{{ t('ws.documents', lang) }} →</a><a class="chip" href="/missions/{{ mission.id }}/vue/risques" style="text-decoration:none">{{ t('ws.risques', lang) }} →</a>
+      <span class="tag">{{ mission.referentiel }}</span>
+      <span class="tag" style="background:#fff4e0;color:#8a5a00" title="Type de mission — {{ type_categorie_lib }}">{{ type_def.libelle }}</span>
+      {% if mission.type_mission == 'CSRD_ESG' %}<a class="chip" href="/missions/{{ mission.id }}/vue/csrd" style="text-decoration:none;background:#e7f7ef;color:#127a4e">Durabilité (CSRD) →</a>{% endif %}
+      {% if mission.type_mission == 'VERIF_SPEC' %}<a class="chip" href="/missions/{{ mission.id }}/vue/verifications" style="text-decoration:none;background:#eef2ff;color:#2F5BFF">Vérifications spécifiques →</a>{% endif %}
+      {% if mission.type_mission == 'FUSION_APPORT' %}<a class="chip" href="/missions/{{ mission.id }}/vue/fusion" style="text-decoration:none;background:#f3ecff;color:#6b3fd0">Parité de fusion →</a>{% endif %}
+      <span class="chip">{{ mission.client.raison_sociale if mission.client else '' }}</span>
+      <span class="chip">{{ mission.pays }}</span>
+      <span class="chip">{{ mission.devise }}</span>
+      <span class="badge">{{ mission.statut }}</span>
+      {% if normes %}<span class="chip" title="Normes d'audit applicables">Normes : {{ normes|join(', ') }}</span>{% endif %}
+    </div>
+  </div>
+
+  <section class="cards">
+    <div class="card"><div class="card-k">Lignes de balance</div><div class="card-v">{{ nb_lignes }}</div></div>
+    <div class="card"><div class="card-k">Seuil de signification</div>
+      <div class="card-v">{% if seuils %}{{ '{:,.0f}'.format(seuils.seuil_signification).replace(',', ' ') }}{% else %}—{% endif %}</div></div>
+    <div class="card"><div class="card-k">Benford (MAD)</div>
+      <div class="card-v {% if benford and benford.suspicion %}alert-v{% endif %}">
+        {% if benford and benford.exploitable %}{{ benford.mad }}{% else %}—{% endif %}</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="mission-head">
+      <div>
+        <div class="eyebrow">{{ type_categorie_lib }}</div>
+        <h2 style="margin:.2rem 0">{{ type_def.libelle }}</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">{{ type_def.nature }}</span>
+        <span class="chip" title="Base normative / légale">{{ type_def.base }}</span>
+      </div>
+    </div>
+    <p class="muted small">Livrable attendu : <b>{{ type_def.livrable }}</b>{% if not type_def.dossier_complet %} · mission spécifique (dossier d'audit complet non requis){% endif %}.</p>
+    {% set faits = diligences|selectattr('fait')|list|length %}
+    <h3>Diligences clés <span class="chip">{{ faits }}/{{ diligences|length }}</span></h3>
+    <table class="grid">
+      <tbody>
+        {% for d in diligences %}
+        <tr>
+          <td class="num" style="width:2.6rem">{% if d.fait %}<span class="niv niv-faible">✓</span>{% else %}<span class="niv niv-modere">○</span>{% endif %}</td>
+          <td>{{ d.libelle }}</td>
+          <td style="width:10rem">
+            <form method="post" action="/missions/{{ mission.id }}/vue/diligence/{{ d.id }}/toggle">
+              <button class="btn-sm" type="submit">{% if d.fait %}À refaire{% else %}Marquer fait{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% set fec = request.query_params.get('fec') %}
+  {% if fec == 'ok' %}
+  <div class="banner {% if request.query_params.get('equilibre') == '1' %}ok-v{% else %}banner-warn{% endif %}">
+    FEC importé : {{ request.query_params.get('comptes') }} comptes, {{ request.query_params.get('ecritures') }} écritures —
+    {% if request.query_params.get('equilibre') == '1' %}balance équilibrée ✓{% else %}⚠ balance déséquilibrée (Σ débit ≠ Σ crédit){% endif %}.
+    Résultat net {{ request.query_params.get('rn') }} · CA {{ request.query_params.get('ca') }} · Capitaux propres {{ request.query_params.get('cp') }}.
+  </div>
+  {% elif fec == 'confirm' %}
+  <div class="banner banner-warn">Une balance existe déjà pour cette mission. Cochez « Remplacer la balance existante » puis relancez l'import FEC pour confirmer l'écrasement.</div>
+  {% elif fec == 'erreur' %}
+  <div class="banner alert-v">Import FEC impossible : fichier illisible ou format non reconnu.</div>
+  {% endif %}
+
+  {% if controles and controles.nb_anomalies %}
+  <div class="banner banner-warn">
+    ⚠ {{ controles.nb_anomalies }} contrôle(s) automatique(s) en échec sur la balance — voir le détail ci-dessous.
+  </div>
+  {% endif %}
+
+  <div class="grid2">
+    <!-- Import balance -->
+    <section class="panel">
+      <h2>Import de la balance</h2>
+      <form method="post" action="/missions/{{ mission.id }}/import-web" enctype="multipart/form-data">
+        <label>Fichier (.xlsx) <input type="file" name="fichier" accept=".xlsx" required></label>
+        <label>Feuille <input type="text" name="feuille" value="Table_BG"></label>
+        <button class="btn-primary" type="submit">Importer</button>
+      </form>
+      {% if nb_lignes %}<p class="muted small">{{ nb_lignes }} lignes importées. <a class="link" href="/missions/{{ mission.id }}/vue/reclassement">Reclasser les comptes →</a></p>{% endif %}
+      <hr>
+      <h3 style="margin:.4rem 0">Import FEC (DGFiP)</h3>
+      <form method="post" action="/missions/{{ mission.id }}/fec-import" enctype="multipart/form-data">
+        <label>Fichier FEC (.txt/.csv) <input type="file" name="fichier" accept=".txt,.csv" required></label>
+        {% if nb_lignes %}<label class="chk"><input type="checkbox" name="confirmer" value="1"> Remplacer la balance existante</label>{% endif %}
+        <button class="btn-primary" type="submit">Importer le FEC</button>
+      </form>
+      <p class="muted small">Le FEC (écritures N) alimente la balance ; cycles classés automatiquement (PCG, éditables). Soldes N-1 non déductibles d'un FEC N seul.</p>
+    </section>
+
+    <!-- Analyse financière -->
+    <section class="panel">
+      <h2>Analyse financière</h2>
+      {% if analyse %}
+      <table class="mini">
+        <tr><td>FRNG</td><td class="num">{{ '{:,.0f}'.format(analyse.agregats.fonds_de_roulement_net_global).replace(',', ' ') }}</td></tr>
+        <tr><td>BFR</td><td class="num">{{ '{:,.0f}'.format(analyse.agregats.besoin_en_fonds_de_roulement).replace(',', ' ') }}</td></tr>
+        <tr><td>Trésorerie nette</td><td class="num">{{ '{:,.0f}'.format(analyse.agregats.tresorerie_nette).replace(',', ' ') }}</td></tr>
+        <tr><td>Autonomie financière</td><td class="num">{{ analyse.ratios.autonomie_financiere }}</td></tr>
+        <tr><td>Liquidité générale</td><td class="num">{{ analyse.ratios.liquidite_generale }}</td></tr>
+      </table>
+      {% else %}<p class="muted">Importer une balance pour afficher l'analyse.</p>{% endif %}
+    </section>
+  </div>
+
+  {% if controles %}
+  <!-- Contrôles automatiques -->
+  <section class="panel">
+    <h2>Contrôles automatiques (balance)</h2>
+    <table class="grid">
+      <thead><tr><th>Contrôle</th><th>Statut</th><th>Détail</th></tr></thead>
+      <tbody>
+        {% for c in controles.controles %}
+        <tr>
+          <td>{{ c.libelle }}</td>
+          <td>
+            {% if c.statut == 'ok' %}<span class="niv niv-faible">OK</span>
+            {% else %}<span class="niv niv-critique">Anomalie</span>{% endif %}
+          </td>
+          <td class="muted small">{{ c.detail }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Contrôles arithmétiques déterministes ; ils orientent les travaux sans préjuger de l'opinion.</p>
+  </section>
+  {% endif %}
+
+  {% if seuil_signif %}
+  <!-- Variations significatives (revue analytique NEP 520) -->
+  <section class="panel">
+    <h2>Variations significatives (&gt; seuil)
+      <span class="chip {% if variations %}alert-v{% endif %}" style="float:right">{{ variations | length }}</span>
+    </h2>
+    <p class="muted small">Seuil de signification appliqué : {{ '{:,.0f}'.format(seuil_signif).replace(',', ' ') }} {{ mission.devise }}.</p>
+    {% if variations %}
+    <table class="grid">
+      <thead><tr><th>Compte</th><th>Solde N</th><th>Solde N-1</th><th>Variation</th><th>%</th></tr></thead>
+      <tbody>
+        {% for v in variations %}
+        <tr>
+          <td>{{ v.compte }} — {{ v.libelle }}</td>
+          <td class="num">{{ '{:,.0f}'.format(v.solde_n).replace(',', ' ') }}</td>
+          <td class="num">{{ '{:,.0f}'.format(v.solde_n1).replace(',', ' ') }}</td>
+          <td class="num">{{ '{:,.0f}'.format(v.variation).replace(',', ' ') }}</td>
+          <td class="num">{% if v.variation_pct is not none %}{{ (v.variation_pct * 100) | round(1) }} %{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Comptes à justifier au titre de la revue analytique ; ce ne sont pas des anomalies avérées.</p>
+    {% else %}
+    <p class="muted">Aucune variation supérieure au seuil de signification.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <!-- Rapports -->
+  <section class="panel">
+    <h2>Rapports (Module 17)
+      <a class="btn-sm" style="float:right;text-decoration:none"
+         href="/missions/{{ mission.id }}/vue/editions">Journal des éditions →</a>
+    </h2>
+    <div class="rapports">
+      {% for r in [
+        {'code':'lettre-mission','lib':'Lettre de mission (NEP 210)'},
+        {'code':'rapport-general','lib':'Rapport général de certification (NEP 700)'},
+        {'code':'note-synthese','lib':'Note de synthèse (NEP 520)'},
+        {'code':'feuille-garde','lib':'Feuille de garde — synthèse du dossier'}] %}
+      <div class="rapport">
+        <span class="rapport-lib">{{ r.lib }}</span>
+        <span class="rapport-dl">
+          <a href="/missions/{{ mission.id }}/rapports/{{ r.code }}?format=docx">Word ↓</a>
+          <a href="/missions/{{ mission.id }}/rapports/{{ r.code }}?format=pdf">PDF ↓</a>
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Cycles + conclusions éditables -->
+  <section class="panel" id="cycles">
+    <h2>Cycles — dossiers Excel & conclusions
+      <a class="btn-sm" style="float:right;text-decoration:none"
+         href="/missions/{{ mission.id }}/excel/dossier-complet">Dossier complet (Synthèse + FM) ↓</a>
+    </h2>
+    <div class="cycles-edit">
+      {% for c in cycles %}
+      <div class="cycle-row {% if c.anomalie %}has-anomalie{% endif %}">
+        <div class="cycle-row-head">
+          <span class="cycle-lib">{{ c.libelle }}</span>
+          <a class="cycle-dl" href="/missions/{{ mission.id }}/excel/{{ c.code }}">Excel ↓</a>
+        </div>
+        <form method="post" action="/missions/{{ mission.id }}/cycles/{{ c.code }}/conclusion-web">
+          <textarea name="conclusion" rows="2" placeholder="Conclusion de travail sur le cycle…">{{ c.conclusion }}</textarea>
+          <div class="cycle-row-foot">
+            <label class="chk"><input type="checkbox" name="anomalie" {% if c.anomalie %}checked{% endif %}> Anomalie</label>
+            <button class="btn-sm" type="submit">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="muted small">Les conclusions saisies alimentent automatiquement la note de synthèse.</p>
+  </section>
+</main>
+{% endblock %}

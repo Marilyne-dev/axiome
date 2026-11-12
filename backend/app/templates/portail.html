@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Portail client · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span>
+    <span class="pill">Portail client</span></div>
+  <nav><a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <span class="pill">{{ user.nom_complet or user.email }}</span>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <div class="mission-head"><h1>{% if client %}{{ client.raison_sociale }}{% else %}Vos dossiers{% endif %}</h1>
+    <div class="chips"><span class="chip">{{ missions|length }} dossier(s)</span></div>
+  </div>
+
+  {% if not user.client_id %}
+  <section class="panel"><p class="muted">Aucun client n'est rattaché à votre compte. Contactez votre cabinet.</p></section>
+  {% elif not missions %}
+  <section class="panel"><p class="muted">Aucune mission en cours pour votre société.</p></section>
+  {% else %}
+  <section class="panel">
+    <table class="grid">
+      <thead><tr><th>Mission</th><th>Référentiel</th><th>Exercice</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for m in missions %}
+        <tr>
+          <td>{{ m.intitule }}</td>
+          <td><span class="tag">{{ m.referentiel }}</span></td>
+          <td>{{ m.exercice or '—' }}</td>
+          <td><span class="niv niv-modere">{{ m.statut }}</span></td>
+          <td><a class="btn-sm" href="/portail/missions/{{ m.id }}">Ouvrir →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+  <p class="muted small">Espace sécurisé : vous ne voyez que les dossiers de votre société. Vous pouvez suivre l'avancement et déposer les pièces demandées.</p>
+</main>
+{% endblock %}

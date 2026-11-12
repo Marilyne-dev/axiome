@@ -1,0 +1,28 @@
+# Secrets & bases locales — NE JAMAIS embarquer dans l'image
+.env
+.env.*
+*.db
+*.sqlite3
+
+# Git & CI
+.git
+.gitignore
+.github
+
+# Python / cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Tests & artefacts de dev
+tests/
+*.zip
+*.xlsx
+*.docx
+*.pdf
+docs/

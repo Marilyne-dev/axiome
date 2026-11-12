@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Accès restreint · AXIOME{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◆</span><span class="brand-name">AXIOME</span></div>
+  <nav><a class="link" href="/dashboard">Tableau de bord</a>
+       <a class="link" href="/vue/langue/{{ 'en' if lang == 'fr' else 'fr' }}">{{ 'EN' if lang == 'fr' else 'FR' }}</a>
+       <a class="link" href="/logout">{{ t('nav.logout', lang) }}</a></nav>
+</header>
+<main class="container">
+  <section class="panel" style="max-width:640px;margin:3rem auto;text-align:center">
+    <h1 style="color:#b02a37">🔒 Accès restreint</h1>
+    <p>Le module <strong>LCB‑FT</strong> (lutte contre le blanchiment et le financement du terrorisme)
+       est <strong>strictement réservé au correspondant LCB‑FT</strong>.</p>
+    <p class="muted">Cette restriction s'applique à tous les autres profils, y compris l'administrateur,
+       afin de préserver la confidentialité des dossiers et des déclarations de soupçon.
+       Chaque tentative d'accès est journalisée.</p>
+  </section>
+</main>
+{% endblock %}
