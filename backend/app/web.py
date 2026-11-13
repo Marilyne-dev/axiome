@@ -548,7 +548,7 @@ def administration_inviter(request: Request, email: str = Form(...),
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Réservé à l'administrateur du cabinet.")
     email = email.strip().lower()
     role_code = role.strip().upper()
-    if role_code == "SUPERADMIN":
+    if role_code in ("SUPERADMIN", "ADMIN", "CLIENT"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Rôle non autorisé.")
     if not email or db.query(_User).filter_by(email=email).first():
         return RedirectResponse("/vue/administration?err=email", status_code=302)
@@ -1684,7 +1684,7 @@ async def administration_collaborateur_add(
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Réservé à l'administrateur du cabinet.")
     email = email.strip().lower()
     role_code = role.strip().upper()
-    if role_code == "SUPERADMIN":
+    if role_code in ("SUPERADMIN", "ADMIN", "CLIENT"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Rôle non autorisé.")
     if not email or db.query(_User).filter_by(email=email).first():
         return RedirectResponse("/vue/administration?err=email", status_code=302)

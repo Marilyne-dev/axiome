@@ -1,6 +1,8 @@
 """API JSON — import FEC (avec garde-fou) et suivi des circularisations (reçue / suppression)."""
 from __future__ import annotations
 
+import pytest
+
 from app.models.balance import LigneBalance
 from app.models.cabinet import Cabinet
 from app.models.client import Client
@@ -91,6 +93,7 @@ def test_import_fec_encodage_latin1(client, db_session):
     assert r.status_code == 200 and r.json()["nb_comptes"] == 2
 
 
+@pytest.mark.cloisonnement
 def test_import_fec_cloisonne_par_cabinet(client, db_session):
     h = _headers(client); autre = _mission(db_session, autre_cabinet=True)
     assert _post_fec(client, h, autre, FEC_OK).status_code == 404
