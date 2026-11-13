@@ -5,6 +5,9 @@ Démarrage local :  uvicorn app.main:app --reload
 """
 from __future__ import annotations
 
+import logging
+import time
+import uuid
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response, status
@@ -37,15 +40,20 @@ from app.api import (
     routes_rapports,
     routes_risques,
     routes_seuils,
+    routes_taches,
 )
 from app.api.deps import get_current_user
 from app.api.scope import garde_cycle, garde_mission
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.i18n import t
+from app.core.logging_config import configure_logging, request_id_var
 from app.core.security import create_access_token, verify_mfa_code, verify_password
 from app.models.cabinet import Cabinet
 from app.models.user import User
+
+configure_logging(settings.log_level, settings.log_format)
+_acces_log = logging.getLogger("axiome.acces")
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -74,10 +82,33 @@ app.include_router(routes_fraude.router, dependencies=[Depends(garde_mission)])
 app.include_router(routes_lcbft.router)
 app.include_router(routes_ia.router)
 app.include_router(routes_rapports.router, dependencies=[Depends(garde_mission)])
+app.include_router(routes_taches.router_missions, dependencies=[Depends(garde_mission)])
+app.include_router(routes_taches.router)
 app.include_router(routes_espace.router)
 app.include_router(routes_public.router)
 app.include_router(routes_console_billing.router)
 app.include_router(web.router)
+
+
+@app.middleware("http")
+async def _journal_acces(request: Request, call_next):
+    """Identifiant de requête + une ligne de log d'accès (méthode, chemin, statut, durée)."""
+    rid = (request.headers.get("X-Request-ID") or uuid.uuid4().hex[:16])[:64]
+    jeton = request_id_var.set(rid)
+    debut = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception:
+        _acces_log.exception("requête en erreur", extra={"methode": request.method, "chemin": request.url.path})
+        raise
+    finally:
+        request_id_var.reset(jeton)
+    if request.url.path not in ("/healthz", "/readyz") and not request.url.path.startswith("/static"):
+        _acces_log.info("%s %s -> %s", request.method, request.url.path, response.status_code,
+                        extra={"statut": response.status_code, "duree_ms": round((time.perf_counter() - debut) * 1000, 1),
+                               "request_id": rid})
+    response.headers["X-Request-ID"] = rid
+    return response
 
 
 @app.middleware("http")

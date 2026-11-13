@@ -1,0 +1,22 @@
+# Dépendances tierces détectées dans le code (sans versions). Si back/requirements.txt existe déjà, gardez-le :
+# ce fichier sert seulement de contrôle. Pour figer vos versions : pip freeze > requirements.txt
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg2-binary
+pydantic
+pydantic-settings
+python-multipart
+jinja2
+httpx
+pyjwt
+bcrypt
+pyotp
+openpyxl
+python-docx
+pypdf
+pillow
+pytesseract
+pdf2image
+pycountry

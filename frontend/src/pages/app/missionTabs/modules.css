@@ -7,3 +7,5 @@
 .module-card b{font-size:14.5px}
 .module-card span{font-size:13px;color:var(--slate);line-height:1.45}
 .module-card em{margin-top:auto;padding-top:6px;font-style:normal;font-weight:700;font-size:13px;color:var(--blue)}
+.module-card.static{cursor:default;max-width:560px}.module-card.static:hover{transform:none;border-color:var(--line);box-shadow:none}
+.module-card.static .btn{align-self:flex-start;margin-top:6px}

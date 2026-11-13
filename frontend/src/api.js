@@ -98,10 +98,9 @@ export const deciderAcceptation = (id, body) => authed(`/missions/${id}/acceptat
 export const genererLettre = (id) => authed(`/missions/${id}/acceptation/lettre-mission`, { method: "POST" });
 export const telechargerRapport = (id, type, format) => authed(`/missions/${id}/rapports/${type}?format=${format}`, { blob: true });
 
-// ---- Import FEC et circularisation ----
-export const importerFec = (id, fichier, confirmer = false) => { const f = new FormData(); f.append("fichier", fichier); return authed(`/missions/${id}/import/fec${confirmer ? "?confirmer=true" : ""}`, { method: "POST", body: f }); };
-export const getConfirmations = (id) => authed(`/missions/${id}/confirmations`);
-export const creerConfirmation = (id, body) => authed(`/missions/${id}/confirmations`, { method: "POST", body });
-export const relancerConfirmation = (id, cid) => authed(`/missions/${id}/confirmations/${cid}/relancer`, { method: "POST" });
-export const confirmationRecue = (id, cid) => authed(`/missions/${id}/confirmations/${cid}/recue`, { method: "POST" });
-export const supprimerConfirmation = (id, cid) => authed(`/missions/${id}/confirmations/${cid}`, { method: "DELETE" });
+// ---- Assistant IA et tâches de fond ----
+export const getIaStatut = () => authed("/ia/statut");
+export const assisterIa = (prompt, contexte = "") => authed("/ia/assister", { method: "POST", body: { prompt, contexte } });
+export const lancerDossierExcel = (id) => authed(`/missions/${id}/excel/dossier-complet/async`, { method: "POST" });
+export const getTache = (tid) => authed(`/taches/${tid}`);
+export const telechargerTache = (tid) => authed(`/taches/${tid}/resultat`, { blob: true });

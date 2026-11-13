@@ -12,6 +12,7 @@
     { "source": "/reinitialiser",          "destination": "https://axiome.onrender.com/reinitialiser" },
     { "source": "/login",                  "destination": "https://axiome.onrender.com/login" },
     { "source": "/logout",                 "destination": "https://axiome.onrender.com/logout" },
+    { "source": "/dashboard", "destination": "https://axiome.onrender.com/dashboard" },
     { "source": "/(.*)",                   "destination": "/index.html" }
   ]
 }

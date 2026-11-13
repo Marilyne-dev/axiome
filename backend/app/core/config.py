@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     virement_iban: str = ""
     virement_bic: str = ""
 
+    # Journalisation : LOG_FORMAT=json en production (une ligne JSON par événement)
+    log_level: str = "INFO"
+    log_format: str = "text"
+
     # Marque
     brand_primary: str = "#0B2545"
     brand_secondary: str = "#C9A227"
@@ -90,6 +94,7 @@ class Settings(BaseSettings):
 # Valeurs par défaut interdites en production.
 _SECRETS_PAR_DEFAUT = {"change-me", "", "change-me-en-production-secret-tres-long-et-aleatoire"}
 _ADMIN_PWD_DEFAUT = "Admin!ChangeMe2026"
+_SUPERADMIN_PWD_DEFAUT = {"Editeur!ChangeMe2026", ""}
 
 
 def verifier_configuration(s: Settings) -> None:
@@ -104,6 +109,8 @@ def verifier_configuration(s: Settings) -> None:
         )
     if s.admin_password == _ADMIN_PWD_DEFAUT:
         erreurs.append("ADMIN_PASSWORD par défaut interdit : définissez un mot de passe fort.")
+    if s.superadmin_password in _SUPERADMIN_PWD_DEFAUT:
+        erreurs.append("SUPERADMIN_PASSWORD par défaut interdit : définissez un mot de passe fort pour le compte éditeur.")
     if s.payment_sandbox:
         erreurs.append("PAYMENT_SANDBOX=true interdit en production (le paiement de test activerait des espaces gratuitement).")
     if s.is_sqlite:
