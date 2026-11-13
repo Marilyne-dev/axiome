@@ -104,3 +104,8 @@ export const assisterIa = (prompt, contexte = "") => authed("/ia/assister", { me
 export const lancerDossierExcel = (id) => authed(`/missions/${id}/excel/dossier-complet/async`, { method: "POST" });
 export const getTache = (tid) => authed(`/taches/${tid}`);
 export const telechargerTache = (tid) => authed(`/taches/${tid}/resultat`, { blob: true });
+
+
+// ---- Rapport général signé : opinion choisie par le signataire ----
+export const getSuggestionsRapportGeneral = (id) => authed(`/missions/${id}/rapports/rapport-general/suggestions`);
+export const telechargerRapportGeneral = (id, format, body) => authed(`/missions/${id}/rapports/rapport-general?format=${format}`, { method: "POST", body, blob: true });
