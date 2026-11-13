@@ -54,3 +54,5 @@ from app.models.edition import RapportEdition  # noqa: E402,F401
 from app.models.fraude_fec import FraudeFecResultat  # noqa: E402,F401
 from app.models.rapprochement import RapprochementBancaire  # noqa: E402,F401
 from app.models.veille import VeilleReglementaire  # noqa: E402,F401
+
+from app.models.conversation_ia import ConversationIA, MessageIA  # noqa: E402,F401

@@ -47,3 +47,37 @@ def assister(prompt: str, contexte: str = "", max_tokens: int = 800) -> dict:
                 "avertissement": "Proposition de l'IA — à valider par le professionnel."}
     except Exception as exc:  # noqa: BLE001 — dégradation gracieuse
         return {"disponible": True, "erreur": str(exc), "reponse": ""}
+
+
+_MAX_HISTORIQUE = 30  # derniers messages renvoyés à l'IA (borne le coût et la taille de la requête)
+
+
+def converser(historique: list[dict], contexte: str = "", max_tokens: int = 1500) -> dict:
+    """Réponse de Claude à partir de tout l'historique de la conversation.
+
+    `historique` : liste ordonnée de {"role": "user"|"assistant", "contenu": str}, dont le dernier
+    élément est la nouvelle question. Dégradé proprement si la clé API est absente.
+    """
+    if not ia_disponible():
+        return {"disponible": False,
+                "message": "Assistant IA non configuré (ANTHROPIC_API_KEY absente).",
+                "reponse": ""}
+    messages = [{"role": m["role"], "content": m["contenu"]} for m in historique[-_MAX_HISTORIQUE:]]
+    while messages and messages[0]["role"] != "user":   # l'API exige un premier message « user »
+        messages.pop(0)
+    systeme = _SYSTEM + (f"\n\nContexte fourni par l'utilisateur :\n{contexte.strip()}" if contexte.strip() else "")
+    try:
+        r = httpx.post(
+            _API_URL,
+            headers={"x-api-key": settings.anthropic_api_key,
+                     "anthropic-version": "2023-06-01", "content-type": "application/json"},
+            json={"model": _MODEL, "max_tokens": max_tokens, "system": systeme, "messages": messages},
+            timeout=60.0,
+        )
+        r.raise_for_status()
+        data = r.json()
+        texte = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
+        return {"disponible": True, "reponse": texte,
+                "avertissement": "Proposition de l'IA — à valider par le professionnel."}
+    except Exception as exc:  # noqa: BLE001 — dégradation gracieuse
+        return {"disponible": True, "erreur": str(exc), "reponse": ""}

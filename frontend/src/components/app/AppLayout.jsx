@@ -30,7 +30,7 @@ export default function AppLayout() {
             <a key={m.href} className="side-link" href={m.href}><Icon d={ICONS[m.icon]} />{pick(m.label, lang)}</a>
           ))}
           <div className="side-sep">{t("nav.inMission")}</div>
-          <span className="side-link soon">{t("nav.inMissionHint")}<em>{t("nav.inMissionTab")}</em></span>
+          <NavLink to="/espace/modules" className={({ isActive }) => `side-link${isActive ? " on" : ""}`}><Icon d={ICONS.folder} />{pick({ fr: "Modules d'audit", en: "Audit modules" }, lang)}</NavLink>
         </nav>
         <button className="side-out" onClick={logout}><Icon d={ICONS.logout} />{t("nav.logout")}</button>
       </aside>

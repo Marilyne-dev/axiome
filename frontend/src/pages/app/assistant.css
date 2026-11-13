@@ -1,0 +1,15 @@
+/* Assistant IA : fil de conversation */
+.ia-chat{display:flex;flex-direction:column;gap:12px;padding:16px}
+.ia-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ia-bar select{flex:1 1 200px;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid rgba(128,128,128,.35);font:inherit;background:#fff}
+.ia-thread{min-height:240px;max-height:55vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px}
+.ia-msg{max-width:92%;padding:10px 14px;border-radius:14px;line-height:1.5}
+.ia-msg small{display:block;font-size:11px;letter-spacing:.4px;text-transform:uppercase;opacity:.65;margin-bottom:2px}
+.ia-text{white-space:pre-wrap;word-break:break-word}
+.ia-msg.user{align-self:flex-end;background:#2F5BFF;color:#fff}
+.ia-msg.assistant{align-self:flex-start;background:#F1F4FB;color:#0B1533}
+.ia-chat textarea{display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.4);font:inherit;resize:vertical}
+.ia-ctx summary{cursor:pointer;font-size:14px;opacity:.8;margin-bottom:6px}
+.ia-compose{display:flex;gap:8px;align-items:flex-end}
+.ia-compose .btn{flex:none}
+.ia-hint{margin:0;font-size:12px}

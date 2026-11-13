@@ -109,3 +109,10 @@ export const telechargerTache = (tid) => authed(`/taches/${tid}/resultat`, { blo
 // ---- Rapport général signé : opinion choisie par le signataire ----
 export const getSuggestionsRapportGeneral = (id) => authed(`/missions/${id}/rapports/rapport-general/suggestions`);
 export const telechargerRapportGeneral = (id, format, body) => authed(`/missions/${id}/rapports/rapport-general?format=${format}`, { method: "POST", body, blob: true });
+
+// ---- Assistant IA : conversations enregistrées ----
+export const getConversations = () => authed("/ia/conversations");
+export const creerConversation = () => authed("/ia/conversations", { method: "POST", body: {} });
+export const getConversation = (id) => authed(`/ia/conversations/${id}`);
+export const envoyerMessageIa = (id, contenu, contexte = "") => authed(`/ia/conversations/${id}/messages`, { method: "POST", body: { contenu, contexte } });
+export const supprimerConversation = (id) => authed(`/ia/conversations/${id}`, { method: "DELETE" });

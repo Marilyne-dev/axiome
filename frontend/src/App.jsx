@@ -10,6 +10,7 @@ import Missions from "./pages/app/Missions.jsx";
 import MissionDetail from "./pages/app/MissionDetail.jsx";
 import Abonnement from "./pages/app/Abonnement.jsx";
 import Assistant from "./pages/app/Assistant.jsx";
+import ModulesHub from "./pages/app/ModulesHub.jsx";
 import { LangProvider } from "./i18n.jsx";
 import { PaiementRetour, PaiementPage } from "./pages/Paiement.jsx";
 
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="missions/:id" element={<MissionDetail />} />
           <Route path="abonnement" element={<Abonnement />} />
           <Route path="assistant" element={<Assistant />} />
+          <Route path="modules" element={<ModulesHub />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

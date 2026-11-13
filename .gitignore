@@ -6,3 +6,12 @@ deploy/sauvegardes/
 _sauvegarde_correctif/
 deploy/.env.production
 deploy/sauvegardes/
+
+_sauvegarde_correctif/
+deploy/.env.production
+deploy/sauvegardes/
+
+# Ne jamais versionner
+_sauvegarde_*/
+backend/storage/
+*.bak
