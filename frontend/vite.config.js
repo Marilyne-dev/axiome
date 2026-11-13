@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 // /api/xyz (navigateur) -> http://localhost:8000/xyz (FastAPI). Le préfixe /api est retiré.
 export default defineConfig({
   plugins: [react()],
+  // Tests automatiques : `npm test` (vitest). Environnement Node : les composants sont rendus en HTML statique.
+  test: { environment: "node", include: ["src/**/*.test.{js,jsx}"], css: false },
   server: {
     port: 5173,
     proxy: {
