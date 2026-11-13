@@ -11,6 +11,10 @@ export const ICONS = {
   logout: <path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M15 8l4 4-4 4M19 12H9" />,
   card: <><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19M6 15h4" /></>,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  upload: <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />,
+  shield: <><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></>,
+  send: <path d="M21 3L10 14M21 3l-7 18-4-7-7-4z" />,
+  doc: <><path d="M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v5h5M8 13h8M8 17h5" /></>,
 };
 
 const NIVEAUX = { faible: ["Faible", "ok"], modere: ["Modéré", "warn"], eleve: ["Élevé", "high"], critique: ["Critique", "ko"] };

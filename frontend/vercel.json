@@ -1,11 +1,17 @@
 {
   "rewrites": [
-    { "source": "/api/:path*",     "destination": "https://axiome.onrender.com/:path*" },
-    { "source": "/vue/:path*",     "destination": "https://axiome.onrender.com/vue/:path*" },
-    { "source": "/console/:path*", "destination": "https://axiome.onrender.com/console/:path*" },
-    { "source": "/static/:path*",  "destination": "https://axiome.onrender.com/static/:path*" },
-    { "source": "/login",          "destination": "https://axiome.onrender.com/login" },
-    { "source": "/logout",         "destination": "https://axiome.onrender.com/logout" },
-    { "source": "/(.*)",           "destination": "/index.html" }
+    { "source": "/api/:path*",             "destination": "https://axiome.onrender.com/:path*" },
+    { "source": "/vue/:path*",             "destination": "https://axiome.onrender.com/vue/:path*" },
+    { "source": "/console/:path*",         "destination": "https://axiome.onrender.com/console/:path*" },
+    { "source": "/static/:path*",          "destination": "https://axiome.onrender.com/static/:path*" },
+    { "source": "/missions/:path*",        "destination": "https://axiome.onrender.com/missions/:path*" },
+    { "source": "/portail/:path*",         "destination": "https://axiome.onrender.com/portail/:path*" },
+    { "source": "/portail",                "destination": "https://axiome.onrender.com/portail" },
+    { "source": "/activer",                "destination": "https://axiome.onrender.com/activer" },
+    { "source": "/mot-de-passe-oublie",    "destination": "https://axiome.onrender.com/mot-de-passe-oublie" },
+    { "source": "/reinitialiser",          "destination": "https://axiome.onrender.com/reinitialiser" },
+    { "source": "/login",                  "destination": "https://axiome.onrender.com/login" },
+    { "source": "/logout",                 "destination": "https://axiome.onrender.com/logout" },
+    { "source": "/(.*)",                   "destination": "/index.html" }
   ]
 }

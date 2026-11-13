@@ -26,8 +26,9 @@ def _assert_mission(db: Session, mission_id: int) -> None:
 def lister(mission_id: int, db: Session = Depends(get_db),
            _=Depends(require_permission("mission:read"))) -> list[dict]:
     _assert_mission(db, mission_id)
-    confs = db.query(Confirmation).filter_by(mission_id=mission_id).all()
-    return [{"id": c.id, "tiers": c.tiers, "type_tiers": c.type_tiers, "statut": c.statut} for c in confs]
+    confs = db.query(Confirmation).filter_by(mission_id=mission_id).order_by(Confirmation.id.desc()).all()
+    return [{"id": c.id, "tiers": c.tiers, "type_tiers": c.type_tiers, "statut": c.statut,
+             "cree_le": c.created_at.date().isoformat() if c.created_at else None} for c in confs]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -56,3 +57,28 @@ def relancer(mission_id: int, conf_id: int, db: Session = Depends(get_db),
     journaliser(db, user_id=user.id, action="confirmation.relancer", objet="mission", detail=str(conf_id))
     db.commit()
     return {"id": c.id, "statut": c.statut}
+
+
+@router.post("/{conf_id}/recue")
+def marquer_recue(mission_id: int, conf_id: int, db: Session = Depends(get_db),
+                  user: User = Depends(require_permission("mission:write"))) -> dict:
+    """Marque la confirmation comme reçue (réponse du tiers obtenue)."""
+    c = db.get(Confirmation, conf_id)
+    if not c or c.mission_id != mission_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Confirmation introuvable")
+    c.statut = "recue"
+    journaliser(db, user_id=user.id, action="confirmation.recue", objet="mission", detail=str(conf_id))
+    db.commit()
+    return {"id": c.id, "statut": c.statut}
+
+
+@router.delete("/{conf_id}", status_code=status.HTTP_204_NO_CONTENT)
+def supprimer(mission_id: int, conf_id: int, db: Session = Depends(get_db),
+              user: User = Depends(require_permission("mission:write"))) -> None:
+    """Supprime une demande de confirmation saisie par erreur."""
+    c = db.get(Confirmation, conf_id)
+    if not c or c.mission_id != mission_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Confirmation introuvable")
+    db.delete(c)
+    journaliser(db, user_id=user.id, action="confirmation.supprimer", objet="mission", detail=str(conf_id))
+    db.commit()

@@ -1,0 +1,49 @@
+/* ===== AXIOME : travaux d'audit (import FEC, circularisation, sélecteur de mission) ===== */
+
+/* sélecteur de mission */
+.pm-pick{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.pm-pick .ff{flex:1;min-width:260px;margin:0}
+.pm-open{font-size:13.5px;font-weight:700;color:var(--blue);white-space:nowrap}.pm-open:hover{text-decoration:underline}
+.pm-hint{margin:6px 2px 0}
+.pm-body{animation:pmin .35s ease both}
+@keyframes pmin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* zone de dépôt */
+.dz{display:grid;justify-items:center;gap:6px;text-align:center;padding:34px 20px;border:2px dashed var(--blue-100);border-radius:18px;background:linear-gradient(160deg,#fff,var(--blue-50));cursor:pointer;transition:.22s}
+.dz input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.dz:hover,.dz.on{border-color:var(--blue);background:var(--blue-50);transform:translateY(-1px)}
+.dz:focus-within{outline:2px solid var(--blue);outline-offset:3px}
+.dz-ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;color:var(--blue);background:#fff;box-shadow:0 12px 26px -14px rgba(47,91,255,.7);transition:.25s}
+.dz.on .dz-ico{transform:scale(1.1) rotate(-4deg)}
+.dz b{font-family:var(--disp);font-size:16px;word-break:break-all}.dz small{color:var(--slate);font-size:13px}
+.dz.has{border-style:solid;border-color:#BFE8D7;background:#F6FCF9}.dz.has .dz-ico{color:var(--green)}
+
+/* confirmation de remplacement */
+.fec-confirm{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:start;margin-top:16px;padding:16px;border-radius:16px;background:#FFF9E6;border:1px solid #F1DDA0;color:#8A6300;animation:pmin .3s ease both}
+.fec-confirm b{display:block;color:#5C4200}.fec-confirm p{font-size:13.5px;margin-top:2px}
+.fc-btns{grid-column:1/-1;display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+
+/* consignes */
+.fec-tips{list-style:none;display:grid;gap:12px;margin:12px 0 18px;font-size:14px;color:var(--ink-2)}
+.fec-tips li{display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:start}
+.fec-tips li svg{color:var(--green);margin-top:2px}.fec-tips li:nth-child(3) svg{color:var(--amber)}
+.fec-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* résultat d'import */
+.fec-res{animation:pmin .4s ease both;margin-top:20px}
+.fec-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:6px}
+.fec-kpis>div{padding:14px 16px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.fec-kpis span{display:block;font-size:12px;color:var(--slate);font-weight:600}
+.fec-kpis b{font-family:var(--disp);font-size:20px;letter-spacing:-.4px}
+
+/* circularisation */
+.circ-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.ck{padding:16px 18px;border-radius:16px;background:linear-gradient(160deg,#fff,#F7F9FF);border:1px solid var(--line);box-shadow:var(--shadow-s)}
+.ck span{display:block;font-size:12.5px;color:var(--slate);font-weight:600}
+.ck b{font-family:var(--disp);font-size:28px;letter-spacing:-.8px}
+.ck-ok b{color:var(--green)}
+.b-info{background:var(--blue-50);color:var(--blue-d)}
+.row-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.btn-mini.ok{color:#0F7A57;background:#E4F6EF;border-color:#BFE8D7}.btn-mini.ok:hover:not(:disabled){background:var(--green);color:#fff}
+.btn-mini.danger{color:#B4232F;background:#FDEAEC;border-color:#F3C1C6}.btn-mini.danger:hover:not(:disabled){background:var(--red);color:#fff}
+@media (max-width:640px){.fec-confirm{grid-template-columns:1fr}.dz{padding:26px 14px}}

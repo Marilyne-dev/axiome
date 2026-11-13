@@ -97,3 +97,11 @@ export const majAcceptation = (id, body) => authed(`/missions/${id}/acceptation`
 export const deciderAcceptation = (id, body) => authed(`/missions/${id}/acceptation/decision`, { method: "POST", body });
 export const genererLettre = (id) => authed(`/missions/${id}/acceptation/lettre-mission`, { method: "POST" });
 export const telechargerRapport = (id, type, format) => authed(`/missions/${id}/rapports/${type}?format=${format}`, { blob: true });
+
+// ---- Import FEC et circularisation ----
+export const importerFec = (id, fichier, confirmer = false) => { const f = new FormData(); f.append("fichier", fichier); return authed(`/missions/${id}/import/fec${confirmer ? "?confirmer=true" : ""}`, { method: "POST", body: f }); };
+export const getConfirmations = (id) => authed(`/missions/${id}/confirmations`);
+export const creerConfirmation = (id, body) => authed(`/missions/${id}/confirmations`, { method: "POST", body });
+export const relancerConfirmation = (id, cid) => authed(`/missions/${id}/confirmations/${cid}/relancer`, { method: "POST" });
+export const confirmationRecue = (id, cid) => authed(`/missions/${id}/confirmations/${cid}/recue`, { method: "POST" });
+export const supprimerConfirmation = (id, cid) => authed(`/missions/${id}/confirmations/${cid}`, { method: "DELETE" });

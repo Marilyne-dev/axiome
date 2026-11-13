@@ -5,7 +5,9 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { Icon, ICONS } from "./ui.jsx";
 
 const NAV = [["/espace", "Tableau de bord", "home", true], ["/espace/clients", "Clients", "users"], ["/espace/missions", "Missions", "folder"], ["/espace/abonnement", "Abonnement", "card"]];
-const SOON = ["Import FEC", "Cartographie des risques", "Circularisation", "Rapports"];
+// Travaux d'audit : chaque entrée ouvre l'outil sur la mission choisie.
+const AUDIT = [["/espace/import-fec", "Import FEC", "upload"], ["/espace/risques", "Cartographie des risques", "shield"],
+  ["/espace/circularisation", "Circularisation", "send"], ["/espace/rapports", "Rapports", "doc"]];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -23,8 +25,10 @@ export default function AppLayout() {
             // Écran rendu par le back (même origine via le proxy) : navigation complète, pas de route React.
             <a className="side-link" href="/vue/administration"><Icon d={ICONS.users} />Équipe du cabinet</a>
           )}
-          <div className="side-sep">Prochainement</div>
-          {SOON.map((s) => <span key={s} className="side-link soon">{s}<em>bientôt</em></span>)}
+          <div className="side-sep">Travaux d'audit</div>
+          {AUDIT.map(([to, label, icon]) => (
+            <NavLink key={to} to={to} className={({ isActive }) => `side-link${isActive ? " on" : ""}`}><Icon d={ICONS[icon]} />{label}</NavLink>
+          ))}
         </nav>
         <button className="side-out" onClick={logout}><Icon d={ICONS.logout} />Se déconnecter</button>
       </aside>
