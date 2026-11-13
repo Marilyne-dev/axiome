@@ -3,11 +3,9 @@ import { NavLink, Outlet } from "react-router-dom";
 import Logo from "../Logo.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Icon, ICONS } from "./ui.jsx";
+import { MODULES_CABINET } from "../../modules.js";
 
 const NAV = [["/espace", "Tableau de bord", "home", true], ["/espace/clients", "Clients", "users"], ["/espace/missions", "Missions", "folder"], ["/espace/abonnement", "Abonnement", "card"]];
-// Travaux d'audit : chaque entrée ouvre l'outil sur la mission choisie.
-const AUDIT = [["/espace/import-fec", "Import FEC", "upload"], ["/espace/risques", "Cartographie des risques", "shield"],
-  ["/espace/circularisation", "Circularisation", "send"], ["/espace/rapports", "Rapports", "doc"]];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -21,14 +19,13 @@ export default function AppLayout() {
           {NAV.map(([to, label, icon, end]) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `side-link${isActive ? " on" : ""}`}><Icon d={ICONS[icon]} />{label}</NavLink>
           ))}
-          {user.roles.includes("ADMIN") && (
-            // Écran rendu par le back (même origine via le proxy) : navigation complète, pas de route React.
-            <a className="side-link" href="/vue/administration"><Icon d={ICONS.users} />Équipe du cabinet</a>
-          )}
-          <div className="side-sep">Travaux d'audit</div>
-          {AUDIT.map(([to, label, icon]) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `side-link${isActive ? " on" : ""}`}><Icon d={ICONS[icon]} />{label}</NavLink>
+          <div className="side-sep">Modules du cabinet</div>
+          {/* Écrans rendus par le back (même origine via le proxy) : navigation complète, pas de route React. */}
+          {MODULES_CABINET.filter((m) => !m.role || user.roles.includes(m.role)).map((m) => (
+            <a key={m.href} className="side-link" href={m.href}><Icon d={ICONS[m.icon]} />{m.label}</a>
           ))}
+          <div className="side-sep">Dans une mission</div>
+          <span className="side-link soon">Cycles, FEC, rapprochement, TVA, DSN, CSRD, fusion…<em>onglet « Modules »</em></span>
         </nav>
         <button className="side-out" onClick={logout}><Icon d={ICONS.logout} />Se déconnecter</button>
       </aside>

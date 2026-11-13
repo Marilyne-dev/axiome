@@ -17,7 +17,11 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(!tokens);
 
   const store = (t) => { localStorage.setItem(KEY, JSON.stringify(t)); setTokens(t); api.setSession({ access: t.access, refresh: t.refresh }); };
-  const logout = () => { localStorage.removeItem(KEY); setTokens(null); setUser(null); api.setSession({ access: null, refresh: null }); };
+  const logout = () => {
+    localStorage.removeItem(KEY); setTokens(null); setUser(null); api.setSession({ access: null, refresh: null });
+    // Supprime aussi le cookie de session utilisé par les écrans rendus par le back (sinon ils restent accessibles).
+    try { fetch("/logout", { redirect: "manual", credentials: "same-origin" }).catch(() => {}); } catch { /* sans effet */ }
+  };
   api.setSession({ onChange: store, onExpired: logout });
 
   // Au chargement : vérifie le jeton ; s'il est expiré, tente le refresh avant de déconnecter.

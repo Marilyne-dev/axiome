@@ -7,8 +7,7 @@ import Risques from "./missionTabs/Risques.jsx";
 import Planification from "./missionTabs/Planification.jsx";
 import Acceptation from "./missionTabs/Acceptation.jsx";
 import Rapports from "./missionTabs/Rapports.jsx";
-import ImportFec from "./missionTabs/ImportFec.jsx";
-import Circularisation from "./missionTabs/Circularisation.jsx";
+import Modules from "./missionTabs/Modules.jsx";
 
 const nb = (v, d = 0) => (v == null ? "—" : new Intl.NumberFormat("fr-FR", { maximumFractionDigits: d }).format(v));
 const PHASES = [["acceptation", "Acceptation"], ["planification", "Planification"], ["realisation", "Réalisation"], ["finalisation", "Finalisation"]];
@@ -147,7 +146,7 @@ function Fraude({ m }) {
   );
 }
 
-const ONGLETS = [["apercu", "Aperçu"], ["acceptation", "Acceptation"], ["planification", "Planification"], ["risques", "Risques"], ["balance", "Balance"], ["fec", "Import FEC"], ["seuils", "Seuils"], ["analyse", "Analyse"], ["fraude", "Fraude"], ["circularisation", "Circularisation"], ["rapports", "Rapports"]];
+const ONGLETS = [["apercu", "Aperçu"], ["acceptation", "Acceptation"], ["planification", "Planification"], ["risques", "Risques"], ["balance", "Balance"], ["seuils", "Seuils"], ["analyse", "Analyse"], ["fraude", "Fraude"], ["rapports", "Rapports"], ["modules", "Modules"]];
 
 export default function MissionDetail() {
   const { id } = useParams(); const [tab, setTab] = useState("apercu");
@@ -167,12 +166,11 @@ export default function MissionDetail() {
         {tab === "planification" && <Planification m={m} />}
         {tab === "risques" && <Risques m={m} />}
         {tab === "balance" && <Balance m={m} reload={reload} />}
-        {tab === "fec" && <ImportFec m={m} reload={reload} />}
         {tab === "seuils" && <Seuils m={m} reload={reload} />}
         {tab === "analyse" && <Analyse m={m} />}
         {tab === "fraude" && <Fraude m={m} />}
-        {tab === "circularisation" && <Circularisation m={m} />}
         {tab === "rapports" && <Rapports m={m} />}
+        {tab === "modules" && <Modules m={m} />}
       </>)}
     </>
   );
