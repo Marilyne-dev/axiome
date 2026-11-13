@@ -15,3 +15,5 @@ deploy/sauvegardes/
 _sauvegarde_*/
 backend/storage/
 *.bak
+
+/package-lock.json
